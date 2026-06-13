@@ -3,7 +3,11 @@ import { clsx } from "clsx";
 import Kicker from "#server/components/kicker";
 import Tag from "#server/components/tag";
 import { cite, sourceNote } from "#server/components/provenance";
-import { esc, formatDate, pctNum } from "#server/helpers/template-helpers";
+import {
+  formatDate,
+  pctNum,
+  trustedHtml,
+} from "#server/helpers/template-helpers";
 import i18next from "i18next";
 import type { PersonProfileData } from "./profile.view-model";
 
@@ -33,7 +37,7 @@ export default function Edustaja({ data }: Props) {
     <>
       <title>
         {i18next.t("common:page_title_format", {
-          title: `${esc(p.firstName)} ${esc(p.lastName)}`,
+          title: `${p.firstName} ${p.lastName}`,
           brand: i18next.t("common:brand_name"),
         })}
       </title>
@@ -45,13 +49,13 @@ export default function Edustaja({ data }: Props) {
           </a>
           &nbsp;›&nbsp;{" "}
           <span>
-            {esc(p.firstName)} {esc(p.lastName)}
+            {p.firstName} {p.lastName}
           </span>
         </div>
 
         <section class="bio-head">
           <div class="bio-portrait">
-            <span class="initials">{esc(p.initials)}</span>
+            <span class="initials">{p.initials}</span>
             <span class="pbar" style={`background:${p.partyColor}`}></span>
           </div>
           <div class="bio-head__main">
@@ -61,21 +65,21 @@ export default function Edustaja({ data }: Props) {
                 <span
                   style={`width:9px;height:9px;border-radius:50%;background:${p.partyColor};display:inline-block`}
                 ></span>
-                {esc(p.partyName)}
+                {p.partyName}
               </span>
             </div>
             <h1 class="bio-name">
-              {esc(p.firstName)} {esc(p.lastName)}
+              {p.firstName} {p.lastName}
             </h1>
             <div class="bio-meta">
-              <span>{esc(p.currentDistrict)}</span>
+              <span>{p.currentDistrict}</span>
               {p.birthYear ? (
                 <>
                   <span class="sep"></span>
                   <span>
                     {i18next.t("persons:profile.born_age_format", {
                       year: p.birthYear,
-                      age: esc(p.age),
+                      age: p.age,
                     })}
                   </span>
                 </>
@@ -83,7 +87,7 @@ export default function Edustaja({ data }: Props) {
               {p.profession ? (
                 <>
                   <span class="sep"></span>
-                  <span>{esc(p.profession)}</span>
+                  <span>{p.profession}</span>
                 </>
               ) : null}
               {p.memberSince ? (
@@ -91,7 +95,7 @@ export default function Edustaja({ data }: Props) {
                   <span class="sep"></span>
                   <span>
                     {i18next.t("persons:mp_member_since", {
-                      date: esc(p.memberSince),
+                      date: p.memberSince,
                     })}
                   </span>
                 </>
@@ -108,7 +112,7 @@ export default function Edustaja({ data }: Props) {
             <div class="v">
               {s.nTotal > 0
                 ? cite(
-                    `${s.participationPct}<small>%</small>`,
+                    trustedHtml(`${s.participationPct}<small>%</small>`),
                     data.provenance.stats.participation,
                   )
                 : "—"}
@@ -119,7 +123,7 @@ export default function Edustaja({ data }: Props) {
             <div class="v">
               {s.nNo > 0
                 ? cite(
-                    `${s.nNo}<small>×</small>`,
+                    trustedHtml(`${s.nNo}<small>×</small>`),
                     data.provenance.stats.votedNo,
                   )
                 : "—"}
@@ -276,10 +280,10 @@ export default function Edustaja({ data }: Props) {
                   </div>
                   {data.dissents.map((d) => (
                     <div class="vote-row">
-                      <div class="vote-row__badge">{esc(d.mpVote)}</div>
+                      <div class="vote-row__badge">{d.mpVote}</div>
                       <div>
                         <div class="vote-row__title">
-                          {esc(d.title || d.sectionTitle)}
+                          {d.title || d.sectionTitle}
                         </div>
                         <div class="vote-row__sub">
                           {d.startTime ? (
@@ -288,7 +292,7 @@ export default function Edustaja({ data }: Props) {
                           {d.sectionTitle ? (
                             <>
                               <span>·</span>
-                              <span>{esc(d.sectionTitle)}</span>
+                              <span>{d.sectionTitle}</span>
                             </>
                           ) : null}
                         </div>
@@ -326,13 +330,11 @@ export default function Edustaja({ data }: Props) {
                     hx-get={`/asiakirja/${init.documentId}`}
                     {...NAV}
                   >
-                    <div class="act-row__id">
-                      {esc(init.parliamentIdentifier)}
-                    </div>
+                    <div class="act-row__id">{init.parliamentIdentifier}</div>
                     <div>
-                      <div class="act-row__title">{esc(init.title ?? "")}</div>
+                      <div class="act-row__title">{init.title ?? ""}</div>
                       <div class="act-row__sub">
-                        {esc(init.initiativeTypeLabel)}
+                        {init.initiativeTypeLabel}
                         {init.relationRole === "first_signer"
                           ? ` · ${i18next.t("persons:profile.first_signer")}`
                           : ` · ${i18next.t("persons:profile.signer")}`}
@@ -356,10 +358,10 @@ export default function Edustaja({ data }: Props) {
                     }
                     {...NAV}
                   >
-                    <div class="act-row__id">{esc(q.parliamentIdentifier)}</div>
+                    <div class="act-row__id">{q.parliamentIdentifier}</div>
                     <div>
-                      <div class="act-row__title">{esc(q.title ?? "")}</div>
-                      <div class="act-row__sub">{esc(q.questionKindLabel)}</div>
+                      <div class="act-row__title">{q.title ?? ""}</div>
+                      <div class="act-row__sub">{q.questionKindLabel}</div>
                     </div>
                     <div class="act-row__date">
                       {q.submissionDate ? formatDate(q.submissionDate) : ""}
@@ -384,7 +386,7 @@ export default function Edustaja({ data }: Props) {
                 <div class="committee-list">
                   {data.committees.map((c) => (
                     <div class="committee-row">
-                      <span class="cname">{esc(c.committeeName)}</span>
+                      <span class="cname">{c.committeeName}</span>
                       <span
                         class={clsx("crole", {
                           lead: [
@@ -394,7 +396,7 @@ export default function Edustaja({ data }: Props) {
                           ].includes(c.role.toLowerCase()),
                         })}
                       >
-                        {esc(c.role)}
+                        {c.role}
                         {c.startDate
                           ? i18next.t(
                               "persons:profile.committee_since_format",
@@ -426,7 +428,7 @@ export default function Edustaja({ data }: Props) {
                         lg: area.weight >= topicLgThreshold,
                       })}
                     >
-                      {esc(area.label)}
+                      {area.label}
                       <span class="tc">{area.weight}</span>
                     </span>
                   ))}
@@ -449,7 +451,7 @@ export default function Edustaja({ data }: Props) {
                     <dt>{i18next.t("persons:profile.basics_age")}</dt>
                     <dd>
                       {i18next.t("persons:profile.age_format", {
-                        age: esc(p.age),
+                        age: p.age,
                       })}{" "}
                       (
                       {i18next.t("persons:profile.born_format", {
@@ -460,19 +462,19 @@ export default function Edustaja({ data }: Props) {
                   </>
                 ) : null}
                 <dt>{i18next.t("persons:profile.basics_district")}</dt>
-                <dd>{esc(p.currentDistrict)}</dd>
+                <dd>{p.currentDistrict}</dd>
                 {p.profession ? (
                   <>
                     <dt>{i18next.t("persons:profile.basics_profession")}</dt>
-                    <dd>{esc(p.profession)}</dd>
+                    <dd>{p.profession}</dd>
                   </>
                 ) : null}
                 <dt>{i18next.t("persons:profile.basics_party")}</dt>
-                <dd>{esc(p.partyName)}</dd>
+                <dd>{p.partyName}</dd>
                 {p.memberSince ? (
                   <>
                     <dt>{i18next.t("persons:profile.basics_member_since")}</dt>
-                    <dd>{esc(p.memberSince)}</dd>
+                    <dd>{p.memberSince}</dd>
                   </>
                 ) : null}
                 <dt>{i18next.t("persons:profile.basics_status")}</dt>

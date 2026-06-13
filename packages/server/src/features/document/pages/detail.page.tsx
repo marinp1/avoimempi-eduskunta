@@ -4,7 +4,6 @@ import i18next from "i18next";
 import Kicker from "#server/components/kicker";
 import { cite, sourceNote } from "#server/components/provenance";
 import {
-  esc,
   partyShortName,
   formatFi as formatFiBase,
 } from "#server/helpers/template-helpers";
@@ -132,7 +131,7 @@ export default function Asiakirja({ data }: Props) {
             <span class="doc-id">{d.identifier}</span>
             <span class="doc-type">{d.documentTypeLabel}</span>
           </div>
-          <h1>{esc(d.title)}</h1>
+          <h1>{d.title}</h1>
           <div class="doc-byline">
             {d.authorPartyColor && (
               <span
@@ -148,14 +147,14 @@ export default function Asiakirja({ data }: Props) {
                 class="who"
                 style="color:var(--ink)"
               >
-                {esc(d.authorName)}
+                {d.authorName}
               </a>
             ) : (
-              <span class="who">{esc(d.authorName)}</span>
+              <span class="who">{d.authorName}</span>
             )}
             {d.authorRole && (
               <span style="font-size:12px;color:var(--muted)">
-                {esc(d.authorRole)}
+                {d.authorRole}
               </span>
             )}
             {d.authorParty && <span>({d.authorParty})</span>}
@@ -198,7 +197,7 @@ export default function Asiakirja({ data }: Props) {
                       {String(stage.step).padStart(2, "0")}
                     </span>
                   </div>
-                  <div class="lc-step__label">{esc(stage.label)}</div>
+                  <div class="lc-step__label">{stage.label}</div>
                   {stage.date && (
                     <div class="lc-step__date">{formatFi(stage.date)}</div>
                   )}
@@ -274,9 +273,9 @@ export default function Asiakirja({ data }: Props) {
                 ? section.html
                 : section.paragraphs.map((para, pi) =>
                     pi === 0 && si === 0 ? (
-                      <p class="standfirst">{esc(para)}</p>
+                      <p class="standfirst">{para}</p>
                     ) : (
-                      <p>{esc(para)}</p>
+                      <p>{para}</p>
                     ),
                   )}
             </>
@@ -303,14 +302,14 @@ export default function Asiakirja({ data }: Props) {
                               hx-get={`/edustaja/${sig.personId}`}
                               {...NAV}
                             >
-                              {esc(sig.name)}
+                              {sig.name}
                             </a>
                           ) : (
-                            esc(sig.name)
+                            sig.name
                           )}
                         </span>
                         {sig.role && (
-                          <span class="signatory-role">{esc(sig.role)}</span>
+                          <span class="signatory-role">{sig.role}</span>
                         )}
                       </div>
                     ))}
@@ -323,10 +322,8 @@ export default function Asiakirja({ data }: Props) {
                   <ul class="law-list">
                     {d.laws.map((law) => (
                       <li>
-                        {law.type && (
-                          <span class="law-type">{esc(law.type)}</span>
-                        )}
-                        <span>{esc(law.name ?? "")}</span>
+                        {law.type && <span class="law-type">{law.type}</span>}
+                        <span>{law.name ?? ""}</span>
                       </li>
                     ))}
                   </ul>
@@ -336,7 +333,7 @@ export default function Asiakirja({ data }: Props) {
           )}
 
           <div class="article__sig">
-            <div class="name">{esc(d.authorName)}</div>
+            <div class="name">{d.authorName}</div>
             <div class="meta">
               {[
                 d.authorRole,
@@ -396,9 +393,9 @@ export default function Asiakirja({ data }: Props) {
                       ? section.html
                       : section.paragraphs.map((para, pi) =>
                           pi === 0 ? (
-                            <p class="standfirst">{esc(para)}</p>
+                            <p class="standfirst">{para}</p>
                           ) : (
-                            <p>{esc(para)}</p>
+                            <p>{para}</p>
                           ),
                         )}
                   </>
@@ -418,15 +415,13 @@ export default function Asiakirja({ data }: Props) {
 
               <div class="article__sig">
                 <div class="name">
-                  {esc(
-                    d.answerMinisterTitle ??
-                      i18next.t("documents:detail.answer_signature_title"),
-                  )}
+                  {d.answerMinisterTitle ??
+                    i18next.t("documents:detail.answer_signature_title")}
                 </div>
                 <div class="meta">
                   {i18next.t("documents:detail.answer_signature_meta", {
                     date: d.answerDate ? formatFi(d.answerDate) : "",
-                    id: esc(d.answerIdentifier ?? ""),
+                    id: d.answerIdentifier ?? "",
                   })}
                 </div>
               </div>
@@ -461,7 +456,7 @@ export default function Asiakirja({ data }: Props) {
                 class="statusdot"
                 style={`background:${d.statusColor}`}
               ></span>
-              {esc(d.statusLabel)}
+              {d.statusLabel}
             </div>
             {d.lifecycleStages.length > 0 && (
               <ul class="timeline mt-14">
@@ -470,7 +465,7 @@ export default function Asiakirja({ data }: Props) {
                     <div class="tl-when">
                       {stage.date ? formatFi(stage.date) : "—"}
                     </div>
-                    <div class="tl-what">{esc(stage.label)}</div>
+                    <div class="tl-what">{stage.label}</div>
                   </li>
                 ))}
               </ul>
@@ -481,9 +476,9 @@ export default function Asiakirja({ data }: Props) {
             <h4>{i18next.t("documents:detail.details_block")}</h4>
             <dl>
               <dt>{i18next.t("documents:detail.details_identifier")}</dt>
-              <dd>{esc(d.identifier)}</dd>
+              <dd>{d.identifier}</dd>
               <dt>{i18next.t("documents:detail.details_type")}</dt>
-              <dd>{esc(d.documentTypeLabel)}</dd>
+              <dd>{d.documentTypeLabel}</dd>
               <dt>{d.primaryDateLabel}</dt>
               <dd>{d.primaryDate}</dd>
               {d.secondaryDate && (
@@ -495,7 +490,7 @@ export default function Asiakirja({ data }: Props) {
               {d.sourceReference && (
                 <>
                   <dt>{i18next.t("documents:detail.details_ref")}</dt>
-                  <dd>{esc(d.sourceReference)}</dd>
+                  <dd>{d.sourceReference}</dd>
                 </>
               )}
               <dt>{i18next.t("documents:detail.details_length")}</dt>
@@ -531,13 +526,13 @@ export default function Asiakirja({ data }: Props) {
               </span>
               <span>
                 <span style="display:block;font:700 14px var(--head);color:var(--ink)">
-                  {esc(d.authorName)}
+                  {d.authorName}
                 </span>
                 <span style="font-size:12px;color:var(--muted)">
                   {d.authorParty
                     ? partyShortName(d.authorParty, d.authorParty)
                     : (d.authorRole ?? "")}
-                  {d.authorDistrict ? ` · ${esc(d.authorDistrict)}` : ""}
+                  {d.authorDistrict ? ` · ${d.authorDistrict}` : ""}
                 </span>
               </span>
             </a>
@@ -552,7 +547,7 @@ export default function Asiakirja({ data }: Props) {
                     class="topic-tag"
                     style="font-size:13px;padding:6px 10px"
                   >
-                    {esc(s)}
+                    {s}
                   </span>
                 ))}
               </div>

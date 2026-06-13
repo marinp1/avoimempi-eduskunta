@@ -1,7 +1,7 @@
 /** @jsxImportSource ../../../jsx */
 import Kicker from "#server/components/kicker";
 import { sourceNote } from "#server/components/provenance";
-import { esc, formatDate } from "#server/helpers/template-helpers";
+import { formatDate } from "#server/helpers/template-helpers";
 import i18next from "i18next";
 import type { PersonSpeechesData } from "../pages/profile.view-model";
 
@@ -20,12 +20,12 @@ export default function SpeechesFragment({ data }: Props) {
       </p>
       {data.speeches.map((sp) => (
         <div class="spoke-row">
-          <div class="st">{esc(sp.sectionTitle ?? "")}</div>
+          <div class="st">{sp.sectionTitle ?? ""}</div>
           <div class="sd">
             {sp.startTime
-              ? `${formatDate(sp.startTime)}${sp.speechType ? ` · ${esc(sp.speechType)}` : ""}`
+              ? `${formatDate(sp.startTime)}${sp.speechType ? ` · ${sp.speechType}` : ""}`
               : sp.speechType
-                ? esc(sp.speechType)
+                ? sp.speechType
                 : ""}
           </div>
         </div>

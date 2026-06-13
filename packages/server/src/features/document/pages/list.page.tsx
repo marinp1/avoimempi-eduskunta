@@ -2,7 +2,6 @@
 import { clsx } from "clsx";
 import i18next from "i18next";
 import PageHead from "#server/components/page-head";
-import { esc } from "#server/helpers/template-helpers";
 import Rule from "#server/components/rule";
 import type { DocumentKind, DocumentRow } from "../kinds/types";
 import { DOCUMENT_KIND_LIST } from "../kinds/registry";
@@ -209,13 +208,13 @@ function DocumentRowComponent({ row }: { row: DocumentRow }) {
   const inner = (
     <>
       <div class="doc-row__left">
-        <span class="doc-row__id">{esc(row.identifier)}</span>
+        <span class="doc-row__id">{row.identifier}</span>
         <span class="pdot" style={`background:${row.authorPartyColor}`}></span>
       </div>
       <div class="doc-row__main">
-        <div class="doc-row__title">{esc(row.title)}</div>
+        <div class="doc-row__title">{row.title}</div>
         <div class="doc-row__sub">
-          {row.authorName && <span>{esc(row.authorName)}</span>}
+          {row.authorName && <span>{row.authorName}</span>}
           {row.date && (
             <>
               {row.authorName && <span class="sep"></span>}
@@ -225,14 +224,14 @@ function DocumentRowComponent({ row }: { row: DocumentRow }) {
           {row.highlight && (
             <>
               <span class="sep"></span>
-              <span>{esc(row.highlight)}</span>
+              <span>{row.highlight}</span>
             </>
           )}
         </div>
         {row.subjects.length > 0 && (
           <div class="doc-row__tags">
             {row.subjects.slice(0, 4).map((s) => (
-              <span class="topic-tag">{esc(s)}</span>
+              <span class="topic-tag">{s}</span>
             ))}
           </div>
         )}

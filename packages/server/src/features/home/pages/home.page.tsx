@@ -5,7 +5,6 @@ import Kicker from "#server/components/kicker";
 import Rule from "#server/components/rule";
 import StatRow from "#server/components/stat-row";
 import {
-  esc,
   formatDate,
   partyColor,
   partyShortName,
@@ -125,7 +124,7 @@ function HomeLead({ data }: { data?: HomeData }) {
                 <span data-tl-sessionlabel>
                   {i18next.t("home:latest_session")}
                 </span>{" "}
-                <b data-tl-session>{esc(session?.key ?? "")}</b>
+                <b data-tl-session>{session?.key ?? ""}</b>
               </span>
               <span class="sep"></span>
               <span data-tl-datetime>{formatDate(day.date)}</span>
@@ -333,7 +332,7 @@ export function HomeBody({
                     yes: v.n_yes,
                     no: v.n_no,
                   });
-                  const voteTitle = esc(v.title || v.section_title);
+                  const voteTitle = v.title || v.section_title;
                   return (
                     <div class="vote-row">
                       <div class={clsx("vote-row__badge", { jaa: passed })}>
@@ -345,7 +344,7 @@ export function HomeBody({
                         <div class="vote-row__title">{voteTitle}</div>
                         <div class="vote-row__sub">
                           <span class="date">{formatDate(v.start_time)}</span>
-                          <span>{esc(v.section_title)}</span>
+                          <span>{v.section_title}</span>
                         </div>
                       </div>
                       <div class="vote-row__result">
@@ -376,7 +375,7 @@ export function HomeBody({
                 {speakers.map((s) => {
                   const color = partyColor(s.party);
                   const shortParty = partyShortName(s.party);
-                  const name = `${esc(s.last_name)}, ${esc(s.first_name)}`;
+                  const name = `${s.last_name}, ${s.first_name}`;
                   return (
                     <div class="rail__item">
                       <div class="rail__title">

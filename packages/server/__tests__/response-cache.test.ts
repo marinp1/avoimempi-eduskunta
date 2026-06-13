@@ -108,7 +108,7 @@ describe("createResponseCache", () => {
       expect(calls).toBe(2);
     });
 
-    test("non-2xx (404) responses are also cached", async () => {
+    test("4xx responses are never cached", async () => {
       const cache = createResponseCache({
         generationKey: "2024-01-01T00:00:00.000Z",
       });
@@ -123,10 +123,11 @@ describe("createResponseCache", () => {
 
       const first = await routeHandler(makeRequest("/api/item/999"));
       expect(first.status).toBe(404);
+      expect(first.headers.get("Cache-Control")).toBeNull();
 
       const second = await routeHandler(makeRequest("/api/item/999"));
       expect(second.status).toBe(404);
-      expect(calls).toBe(1); // cached
+      expect(calls).toBe(2); // not cached
     });
 
     test("5xx responses are never cached", async () => {
@@ -203,7 +204,7 @@ describe("createResponseCache", () => {
       expect(wrapped["/api/health"]).toBe(staticResponse);
     });
 
-    test("maxEntries ceiling skips insertion without error", async () => {
+    test("maxEntries ceiling evicts the oldest entry to admit a new one", async () => {
       const cache = createResponseCache({
         generationKey: "2024-01-01T00:00:00.000Z",
         maxEntries: 1,
@@ -219,20 +220,24 @@ describe("createResponseCache", () => {
       };
       const wrapped = cache.wrapRoutes(routes);
 
-      // Fill the one allowed slot
+      // Fill the one allowed slot with /api/a
       await (wrapped["/api/a"] as { GET: typeof handler }).GET(
         makeRequest("/api/a"),
       );
-      // This should hit the ceiling and not be cached
+      // /api/b evicts /api/a and takes the slot
       await (wrapped["/api/b"] as { GET: typeof handler }).GET(
         makeRequest("/api/b"),
       );
       await (wrapped["/api/b"] as { GET: typeof handler }).GET(
         makeRequest("/api/b"),
       );
+      // /api/b: 1 miss (inserted after evicting /api/a), then 1 hit
+      expect(calls).toBe(2);
 
-      // /api/a: 1 miss (stored, fills the 1 slot)
-      // /api/b: 2 misses (ceiling hit, never cached)
+      // /api/a was evicted, so it misses again (and evicts /api/b)
+      await (wrapped["/api/a"] as { GET: typeof handler }).GET(
+        makeRequest("/api/a"),
+      );
       expect(calls).toBe(3);
     });
 

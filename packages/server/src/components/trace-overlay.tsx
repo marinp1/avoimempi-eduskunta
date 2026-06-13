@@ -1,6 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
 import i18next from "i18next";
-import { esc } from "#server/helpers/template-helpers";
 import TraceGraph from "./trace-graph";
 import type {
   PageTrace,
@@ -60,7 +59,7 @@ function Legend() {
       {items.map(([kind, label]) => (
         <span class={`trace-legend__i trace-legend__i--${kind}`}>
           <span class="dot"></span>
-          {esc(label)}
+          {label}
         </span>
       ))}
     </div>
@@ -85,20 +84,18 @@ export default function TraceOverlay({
       footer={
         <div id="trace-detail" class="trace-detail">
           <p class="trace-detail__hint">
-            {esc(i18next.t("components:trace.detail_hint"))}
+            {i18next.t("components:trace.detail_hint")}
           </p>
         </div>
       }
     >
-      <p class="trace__sub">{esc(i18next.t("components:trace.subtitle"))}</p>
+      <p class="trace__sub">{i18next.t("components:trace.subtitle")}</p>
       <Legend />
       <div class="trace-graph-wrap">
         <TraceGraph trace={trace} layout={layout} forPath={forPath} />
       </div>
       {layout.collapsedFinals ? (
-        <p class="trace__note">
-          {esc(i18next.t("components:trace.fallback_note"))}
-        </p>
+        <p class="trace__note">{i18next.t("components:trace.fallback_note")}</p>
       ) : null}
     </TraceShell>
   );
@@ -108,7 +105,7 @@ export default function TraceOverlay({
 export function emptyTraceOverlay(): string {
   return (
     <TraceShell>
-      <p class="trace__empty">{esc(i18next.t("components:trace.empty"))}</p>
+      <p class="trace__empty">{i18next.t("components:trace.empty")}</p>
     </TraceShell>
   );
 }
@@ -133,7 +130,7 @@ function TraceDetail({
   return (
     <div class="trace-detail__panel">
       <div class="trace-detail__head">
-        <span class="trace-detail__title">{esc(title)}</span>
+        <span class="trace-detail__title">{title}</span>
         <span class="trace-detail__actions">
           {action ?? ""}
           <button
@@ -165,13 +162,13 @@ function ParamsList({ params }: { params: Record<string, unknown> }) {
   return (
     <div class="trace-params">
       <p class="trace-params__title">
-        {esc(i18next.t("components:trace.params_title"))}
+        {i18next.t("components:trace.params_title")}
       </p>
       <dl class="trace-params__list">
         {entries.map(([name, value]) => (
           <div class="trace-params__row">
-            <dt class="trace-params__key">{esc(name)}</dt>
-            <dd class="trace-params__val">{esc(formatParamValue(value))}</dd>
+            <dt class="trace-params__key">{name}</dt>
+            <dd class="trace-params__val">{formatParamValue(value)}</dd>
           </div>
         ))}
       </dl>
@@ -220,44 +217,40 @@ export function traceSourceDetail({
           target="_blank"
           rel="noopener"
         >
-          {esc(i18next.t("components:trace.open_in_api"))} ↗
+          {i18next.t("components:trace.open_in_api")} ↗
         </a>
       }
     >
-      <p class="trace-detail__sub">{esc(source.displayName)}</p>
-      {meta ? <p class="trace-detail__meta">{esc(meta)}</p> : null}
-      <p class="trace-detail__ep">{esc(source.endpoint)}</p>
+      <p class="trace-detail__sub">{source.displayName}</p>
+      {meta ? <p class="trace-detail__meta">{meta}</p> : null}
+      <p class="trace-detail__ep">{source.endpoint}</p>
       {aggregatedOnly ? (
         <>
           <p class="trace-detail__note">
-            {esc(i18next.t("components:trace.aggregated_note"))}
+            {i18next.t("components:trace.aggregated_note")}
           </p>
           <ParamsList params={params} />
         </>
       ) : records.length ? (
         <div class="trace-records">
           <p class="trace-records__title">
-            {esc(
-              i18next.t("components:trace.records_summary", {
-                count: records.length,
-              }),
-            )}
+            {i18next.t("components:trace.records_summary", {
+              count: records.length,
+            })}
           </p>
           <table class="trace-records__table">
             <thead>
               <tr>
-                <th>{esc(idHeader)}</th>
-                <th>{esc(i18next.t("components:trace.record_label_col"))}</th>
+                <th>{idHeader}</th>
+                <th>{i18next.t("components:trace.record_label_col")}</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {shown.map((r) => (
                 <tr>
-                  <td class="trace-records__id">{esc(r.value)}</td>
-                  <td class="trace-records__label">
-                    {r.label ? esc(r.label) : ""}
-                  </td>
+                  <td class="trace-records__id">{r.value}</td>
+                  <td class="trace-records__label">{r.label ? r.label : ""}</td>
                   <td class="trace-records__open">
                     <a href={r.url} target="_blank" rel="noopener">
                       ↗
@@ -269,7 +262,7 @@ export function traceSourceDetail({
           </table>
           {rest > 0 ? (
             <p class="trace-records__more">
-              {esc(i18next.t("components:trace.records_more", { count: rest }))}
+              {i18next.t("components:trace.records_more", { count: rest })}
             </p>
           ) : null}
         </div>
@@ -291,7 +284,7 @@ export function traceSqlDetail({
   return (
     <TraceDetail title={file}>
       <pre class="trace-detail__code">
-        <code>{esc(sql)}</code>
+        <code>{sql}</code>
       </pre>
       <ParamsList params={params} />
     </TraceDetail>
@@ -303,7 +296,7 @@ export function emptyTraceDetail(title: string): string {
   return (
     <TraceDetail title={title}>
       <p class="trace__empty">
-        {esc(i18next.t("components:trace.detail_unavailable"))}
+        {i18next.t("components:trace.detail_unavailable")}
       </p>
     </TraceDetail>
   );

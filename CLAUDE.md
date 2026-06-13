@@ -6,16 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Avoimempi Eduskunta (More Open Parliament) is a data aggregation and analysis platform for Finnish Parliament (Eduskunta) data. The project fetches, parses, and imports data from the Eduskunta Open API into a normalized SQLite database, then serves it through an htmx-based web application.
 
-## Issues
-
-Issues are tracked locally in .issues folder.
-
 ## Technology Stack
 
-- **Runtime**: Bun v1.2.2 (required)
+- **Runtime**: Bun (required)
 - **Language**: TypeScript with ESM modules
 - **Database**: SQLite with WAL mode
-- **Storage**: Offline-first storage abstraction (JSON files on local filesystem)
+- **Storage**: Offline-first storage abstraction (SQLite row stores + local filesystem)
 - **Frontend**: htmx with CSS
 - **Container**: Podman or Docker
 
@@ -36,13 +32,13 @@ frontend) have been removed — the htmx frontend now lives inside `packages/ser
 
 ## Storage Architecture
 
-The project uses an offline-first storage abstraction that writes to local filesystem:
+The project uses offline-first, local storage:
 
-1. **data/raw/{TableName}/page\_\*.json** - Raw API responses (created by scraper)
-2. **data/parsed/{TableName}/page\_\*.json** - Parsed/transformed data (created by parser)
-3. **avoimempi-eduskunta.db** - Final normalized SQLite schema (created by migrator)
+1. **data/raw.db** - Raw API rows (created by the scraper via the row-store abstraction in `packages/shared/storage/row-store/`)
+2. **data/parsed.db** - Parsed/transformed rows (created by the parser)
+3. **avoimempi-eduskunta.db** - Final normalized SQLite schema (created by the migrator)
 
-Storage abstraction is managed through `packages/shared/storage/index.ts` which provides:
+A generic key/value storage abstraction also exists in `packages/shared/storage/index.ts` (used for artifacts and metadata):
 
 - `storage.put(key, data)` - Write data to storage
 - `storage.get(key)` - Read data from storage
@@ -117,7 +113,7 @@ Each table goes through a three-stage ETL process:
    - Fetches paginated data from `https://avoindata.eduskunta.fi/api/v1/tables/{TableName}/batch`
    - Stores raw responses in `data/raw.db` using the row-store abstraction
    - Uses primary key-based pagination (`pkStartValue`)
-   - Rate-limited with 10ms between requests
+   - Rate-limited with 25ms between requests; transient failures retried with backoff (`scraper/fetch-retry.ts`)
    - Controlled via `bun run scrape` CLI
 
 2. **Parser** (`packages/datapipe/parser/`):
@@ -130,8 +126,8 @@ Each table goes through a three-stage ETL process:
 3. **Migrator** (`packages/datapipe/migrator/`):
    - Uses `bun-sqlite-migrations` for schema management
    - Migrations stored in `packages/datapipe/migrator/migrations/`
-   - Each table has a migrator function in `{TableName}/migrator.ts`
-   - Imports occur in specific order (defined in `IMPORT_ORDER`)
+   - Each table has a migrator function in `fn/{TableName}.ts` (registered in `table-migrators.ts`)
+   - Imports occur in specific order (defined in `IMPORT_ORDER` in `migrate.ts`)
    - Clears all tables before importing to ensure clean state
    - Triggered via `bun run migrate` CLI
 
@@ -177,7 +173,7 @@ Check the root `tsconfig.json` for the full list.
 
 ### Table Names and Constants
 
-All supported table names are defined in `packages/shared/constants/TableNames.ts`. Primary keys for each table are in `packages/shared/constants/PrimaryKeys.ts`.
+All supported table names (`TableNames`) and per-table primary keys (`PrimaryKeys`) are defined in `packages/shared/constants/index.ts`.
 
 Common tables:
 
@@ -189,13 +185,30 @@ Common tables:
 
 ## Development Notes
 
+### HTML Escaping in Templates (server JSX)
+
+The custom JSX runtime (`packages/server/src/jsx/jsx-runtime.ts`) **escapes by
+default**: plain-string children and attribute values are HTML-escaped
+automatically. Do NOT call `esc()` inside JSX expressions — that double-escapes.
+
+- Nested JSX elements and function-component return values are trusted
+  (wrapped in `SafeHtml`) and compose without double-escaping.
+- To inject pre-built raw HTML (e.g. from an HTML-builder helper), wrap it
+  with `trustedHtml(...)` from `#server/jsx/jsx-runtime` — never wrap request-
+  or API-derived data directly.
+- `esc()` (`#server/helpers/template-helpers`) is still needed when assembling
+  raw HTML strings via template literals outside JSX (e.g. route-level
+  not-found fragments).
+- `dangerouslySetInnerHTML={{ __html }}` is supported for trusted HTML such as
+  translation strings containing markup.
+
 ### Adding Support for a New Table
 
-1. Ensure table name exists in `packages/shared/constants/TableNames.ts`
+1. Ensure table name exists in `packages/shared/constants/index.ts` (`TableNameMap` + `PrimaryKeys`)
 2. (Optional) Create custom parser: `packages/datapipe/parser/fn/{TableName}.ts`
-3. Create migrator: `packages/datapipe/migrator/{TableName}/migrator.ts`
-4. Add migration SQL if needed: `packages/datapipe/migrator/migrations/V*.sql`
-5. Update `IMPORT_ORDER` in `packages/datapipe/migrator/import-data.ts` if dependencies exist
+3. Create migrator: `packages/datapipe/migrator/fn/{TableName}.ts` and register it in `packages/datapipe/migrator/table-migrators.ts`
+4. Add migration SQL if needed: `packages/datapipe/migrator/migrations/V*.sql` (and register the filename in `packages/datapipe/__tests__/migrations-schema.test.ts`)
+5. Update `IMPORT_ORDER` in `packages/datapipe/migrator/migrate.ts` if dependencies exist
 6. Run the pipeline: `bun run scrape <TableName>` → `bun run parse <TableName>` → `bun run migrate`
 
 ### Migration File Best Practices

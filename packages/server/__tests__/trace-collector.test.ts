@@ -292,12 +292,14 @@ describe("traceSourceDetail", () => {
   ];
 
   test("renders a records table with the pkName header, deep link and label", () => {
-    const html = traceSourceDetail({
-      source: aanestysSource(),
-      records,
-      params: {},
-      aggregatedOnly: false,
-    });
+    const html = String(
+      traceSourceDetail({
+        source: aanestysSource(),
+        records,
+        params: {},
+        aggregatedOnly: false,
+      }),
+    );
     expect(html).toContain("SaliDBAanestys");
     expect(html).toContain("AanestysId");
     expect(html).toContain("Valtion talousarvio");
@@ -307,12 +309,14 @@ describe("traceSourceDetail", () => {
   });
 
   test("aggregated-only renders the filter params and no records table", () => {
-    const html = traceSourceDetail({
-      source: aanestysSource(),
-      records: [],
-      params: { $id: 56634 },
-      aggregatedOnly: true,
-    });
+    const html = String(
+      traceSourceDetail({
+        source: aanestysSource(),
+        records: [],
+        params: { $id: 56634 },
+        aggregatedOnly: true,
+      }),
+    );
     expect(html).toContain("$id");
     expect(html).toContain("56634");
     expect(html).not.toContain("trace-records__table");
@@ -321,11 +325,13 @@ describe("traceSourceDetail", () => {
 
 describe("traceSqlDetail", () => {
   test("renders the filename, HTML-escaped SQL and the populated params", () => {
-    const html = traceSqlDetail({
-      file: "demo.sql",
-      sql: "SELECT a & b FROM t WHERE x < $id",
-      params: { $id: 56634 },
-    });
+    const html = String(
+      traceSqlDetail({
+        file: "demo.sql",
+        sql: "SELECT a & b FROM t WHERE x < $id",
+        params: { $id: 56634 },
+      }),
+    );
     expect(html).toContain("demo.sql");
     expect(html).toContain("SELECT a &amp; b FROM t WHERE x &lt; $id");
     expect(html).toContain("$id");
@@ -333,7 +339,7 @@ describe("traceSqlDetail", () => {
   });
 
   test("includes a dismiss control for the detail pane", () => {
-    const html = traceSqlDetail({ file: "demo.sql", sql: "SELECT 1" });
+    const html = String(traceSqlDetail({ file: "demo.sql", sql: "SELECT 1" }));
     expect(html).toContain("data-trace-detail-close");
   });
 });

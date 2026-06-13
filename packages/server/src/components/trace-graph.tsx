@@ -1,6 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
 import i18next from "i18next";
-import { esc } from "#server/helpers/template-helpers";
 import type {
   PageTrace,
   TraceSourceNode,
@@ -60,14 +59,14 @@ function SourceNode({
       hx-swap="innerHTML transition:false"
       hx-trigger="click, keyup[key=='Enter']"
     >
-      <title>{esc(tip)}</title>
+      <title>{tip}</title>
       <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="7" />
       <text class="trace-node__t" x={n.x + 13} y={n.y + 22}>
-        {esc(trunc(n.label, 30))}
+        {trunc(n.label, 30)}
       </text>
       {rows ? (
         <text class="trace-node__m" x={n.x + 13} y={n.y + 41}>
-          {esc(rows)}
+          {rows}
         </text>
       ) : null}
       {fetched ? (
@@ -76,7 +75,7 @@ function SourceNode({
           x={n.x + 13}
           y={n.y + 57}
         >
-          {esc(trunc(fetched, 28))}
+          {trunc(fetched, 28)}
         </text>
       ) : null}
     </a>
@@ -87,7 +86,7 @@ function SourceNode({
 function PlainNode({ n, label }: { n: LaidOutNode; label: string }) {
   return (
     <g class={`trace-node trace-node--${n.kind}`} data-node-id={n.id}>
-      <title>{esc(label)}</title>
+      <title>{label}</title>
       <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="7" />
       <text
         class="trace-node__t"
@@ -95,7 +94,7 @@ function PlainNode({ n, label }: { n: LaidOutNode; label: string }) {
         y={n.y + n.h / 2 + 4}
         text-anchor="middle"
       >
-        {esc(trunc(label, 30))}
+        {trunc(label, 30)}
       </text>
     </g>
   );
@@ -116,7 +115,7 @@ function QueryNode({ n, forPath }: { n: LaidOutNode; forPath: string }) {
       hx-swap="innerHTML transition:false"
       hx-trigger="click, keyup[key=='Enter']"
     >
-      <title>{esc(i18next.t("components:trace.view_sql"))}</title>
+      <title>{i18next.t("components:trace.view_sql")}</title>
       <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="7" />
       <text
         class="trace-node__t"
@@ -124,7 +123,7 @@ function QueryNode({ n, forPath }: { n: LaidOutNode; forPath: string }) {
         y={n.y + n.h / 2 + 4}
         text-anchor="middle"
       >
-        {esc(trunc(n.label, 30))}
+        {trunc(n.label, 30)}
       </text>
     </a>
   );
@@ -182,7 +181,7 @@ export default function TraceGraph({
             y={layout.headerY}
             text-anchor="middle"
           >
-            {esc(i18next.t(COLUMN_LABEL_KEYS[col.index]!))}
+            {i18next.t(COLUMN_LABEL_KEYS[col.index]!)}
           </text>
         ))}
       </g>

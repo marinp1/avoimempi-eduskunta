@@ -83,6 +83,9 @@ describe("Migration schema", () => {
       "V001.037__vaski_document_guid.sql",
       "V001.038__query_performance_indexes.sql",
       "V001.039__document_pdf_text.sql",
+      "V001.040__expert_statement_author.sql",
+      "V001.041__expert_statement_author_org.sql",
+      "V001.042__expert_statement_analysis.sql",
     ]);
   });
 

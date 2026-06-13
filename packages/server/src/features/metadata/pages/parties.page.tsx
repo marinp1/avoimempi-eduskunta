@@ -1,6 +1,5 @@
 /** @jsxImportSource ../../../jsx */
 import PageHead from "#server/components/page-head";
-import { esc } from "#server/helpers/template-helpers";
 import type { PuolueetData, PartyRow } from "./list.view-model";
 import i18next from "i18next";
 
@@ -116,19 +115,19 @@ export default function Puolueet({ title, data }: Props) {
 function PartyRowItem({ row }: { row: PartyRow }) {
   return (
     <a
-      href={`/puolue/${esc(row.code)}`}
+      href={`/puolue/${row.code}`}
       class="prow"
-      hx-get={`/puolue/${esc(row.code)}`}
+      hx-get={`/puolue/${row.code}`}
       {...NAV}
     >
       <div class="prow__sq" style={`--p:${row.color}`}>
         {row.shortName}
       </div>
       <div class="prow__id">
-        <span class="prow__name">{esc(row.name)}</span>
+        <span class="prow__name">{row.name}</span>
         {row.chairName && (
           <span class="prow__sub">
-            {i18next.t("parties:chair_prefix")} {esc(row.chairName)}
+            {i18next.t("parties:chair_prefix")} {row.chairName}
           </span>
         )}
       </div>

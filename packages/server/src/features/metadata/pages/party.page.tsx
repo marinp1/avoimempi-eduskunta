@@ -2,7 +2,6 @@
 import { clsx } from "clsx";
 import Kicker from "#server/components/kicker";
 import Tag from "#server/components/tag";
-import { esc } from "#server/helpers/template-helpers";
 import type { PartyDetailData } from "./detail.view-model";
 import i18next from "i18next";
 
@@ -40,13 +39,13 @@ export default function Puolue({ title, data }: Props) {
           >
             {i18next.t("parties:detail.breadcrumb")}
           </a>
-          &nbsp;›&nbsp; <span>{esc(p.name)}</span>
+          &nbsp;›&nbsp; <span>{p.name}</span>
         </div>
 
         <section class="bio-head">
           <div class="bio-portrait">
             <span class="initials" style="font-size:30px">
-              {esc(p.shortName)}
+              {p.shortName}
             </span>
             <span class="pbar" style={`background:${p.color}`}></span>
           </div>
@@ -61,17 +60,17 @@ export default function Puolue({ title, data }: Props) {
                 modifier={p.bloc === "government" ? "hall" : "opp"}
               />
             </div>
-            <h1 class="bio-name">{esc(p.name)}</h1>
+            <h1 class="bio-name">{p.name}</h1>
             <div class="bio-meta">
               <span>
-                {esc(p.name)} {i18next.t("parties:detail.mp_group_suffix")}
+                {p.name} {i18next.t("parties:detail.mp_group_suffix")}
               </span>
               <span class="sep"></span>
               {p.chairName && (
                 <>
                   <span>
                     {i18next.t("parties:chair_prefix")}{" "}
-                    <b style="color:var(--ink)">{esc(p.chairName)}</b>
+                    <b style="color:var(--ink)">{p.chairName}</b>
                   </span>
                   <span class="sep"></span>
                 </>
@@ -86,7 +85,7 @@ export default function Puolue({ title, data }: Props) {
               {p.govtSince && (
                 <span>
                   {i18next.t("parties:detail.in_government_since", {
-                    year: esc(p.govtSince),
+                    year: p.govtSince,
                   })}
                 </span>
               )}
@@ -173,7 +172,7 @@ export default function Puolue({ title, data }: Props) {
                     </span>
                   )}
                 </div>
-                <p class="psec__intro">{esc(coh.label)}</p>
+                <p class="psec__intro">{coh.label}</p>
                 <div class="vote-bar mt-14">
                   <span class="v-jaa" style={`width:${coh.pct}%`}>
                     {i18next.t("parties:detail.cohesion_unified")} {coh.pct}%
@@ -218,7 +217,7 @@ export default function Puolue({ title, data }: Props) {
                       >
                         <span class="vote-row__badge tyh">{v.dissenters}×</span>
                         <span class="vote-row__info">
-                          <span class="vote-row__title">{esc(v.title)}</span>
+                          <span class="vote-row__title">{v.title}</span>
                           <span class="vote-row__sub">{v.date}</span>
                         </span>
                         <span class="vote-row__result">
@@ -251,17 +250,17 @@ export default function Puolue({ title, data }: Props) {
                       <span style={`background:${m.color}`}></span>
                     </span>
                     <span class="mp-name">
-                      {esc(m.firstName)} {esc(m.lastName)}
+                      {m.firstName} {m.lastName}
                     </span>
                     <span class="mp-party">
-                      {esc(m.partyCode)}{" "}
+                      {m.partyCode}{" "}
                       <small>
                         {p.bloc === "government"
                           ? i18next.t("common:government")
                           : i18next.t("common:opposition")}
                       </small>
                     </span>
-                    <span class="mp-district">{esc(m.district)}</span>
+                    <span class="mp-district">{m.district}</span>
                     <span class="mp-age">{m.age ?? "–"}</span>
                     <span class="mp-att">
                       <span class="track">
@@ -288,9 +287,9 @@ export default function Puolue({ title, data }: Props) {
                 />
                 {data.committeeChairs.map((cc) => (
                   <div class="committee-row">
-                    <span class="cname">{esc(cc.committee)}</span>
+                    <span class="cname">{cc.committee}</span>
                     <span class={clsx("crole", cc.isLead && "lead")}>
-                      {esc(cc.name)}
+                      {cc.name}
                     </span>
                   </div>
                 ))}
@@ -349,7 +348,7 @@ export default function Puolue({ title, data }: Props) {
                 />
                 <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
                   {data.topics.map((t) => (
-                    <span class="topic-tag">{esc(t)}</span>
+                    <span class="topic-tag">{t}</span>
                   ))}
                 </div>
               </section>
@@ -364,9 +363,9 @@ export default function Puolue({ title, data }: Props) {
                 />
                 {data.recentSpeeches.map((sp) => (
                   <div class="spoke-row">
-                    <div class="st">{esc(sp.title)}</div>
+                    <div class="st">{sp.title}</div>
                     <div class="sd">
-                      {sp.date} · {esc(sp.name)}
+                      {sp.date} · {sp.name}
                     </div>
                   </div>
                 ))}

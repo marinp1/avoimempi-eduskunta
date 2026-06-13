@@ -1,6 +1,7 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
 import i18next from "i18next";
+import { trustedHtml } from "#server/jsx/jsx-runtime";
 
 /** Sitting tick: minimal data needed to render the timeline track. */
 export interface SittingTick {
@@ -30,9 +31,12 @@ export interface TimelineData {
   oob?: boolean;
 }
 
-/** Serialises data for a JSON script block, escaping `</script>` sequences. */
+/** Serialises data for a JSON script block. Escapes `<` so the payload can
+ *  never terminate the script element, and marks the result trusted so the
+ *  JSX runtime does not entity-escape it (entities are not decoded inside
+ *  `<script>`, which would corrupt the JSON). */
 function safeJson(data: unknown): string {
-  return JSON.stringify(data).replace(/<\/script/gi, "<\\/script");
+  return trustedHtml(JSON.stringify(data).replaceAll("<", "\\u003c"));
 }
 
 /** Server-rendered timeline scrubber injected after the masthead on every page. */

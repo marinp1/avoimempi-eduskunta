@@ -8,7 +8,6 @@ import {
   age,
   buildHref,
   districtShort,
-  esc,
   partyColor,
   partyShortName,
   sortClass,
@@ -205,9 +204,9 @@ export default function RosterContent({
             r.is_in_government === 1
               ? i18next.t("common:government")
               : i18next.t("common:opposition");
-          const firstName = esc(r.first_name);
-          const lastName = esc(r.last_name);
-          const district = esc(districtShort(r.district_name));
+          const firstName = r.first_name;
+          const lastName = r.last_name;
+          const district = districtShort(r.district_name);
           const attW = Math.min(100, Math.max(0, r.participation_rate));
 
           return (

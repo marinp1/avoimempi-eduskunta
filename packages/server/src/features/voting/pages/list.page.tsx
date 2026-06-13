@@ -1,7 +1,6 @@
 /** @jsxImportSource ../../../jsx */
 import { clsx } from "clsx";
 import PageHead from "#server/components/page-head";
-import { esc } from "#server/helpers/template-helpers";
 import i18next from "i18next";
 import type { AanestyksetData, VoteGroup, VoteRow } from "./list.view-model";
 
@@ -171,7 +170,7 @@ function VoteGroupBlock({ group }: { group: VoteGroup }) {
     <div class="vgroup">
       <div class="week-head">
         <span class="week-head__k">{i18next.t("votings:group_header")}</span>
-        <span class="week-head__t">{esc(group.sessionDateLabel)}</span>
+        <span class="week-head__t">{group.sessionDateLabel}</span>
         <span class="week-head__meta">
           {i18next.t("votings:count", { count: group.rows.length })}
         </span>
@@ -195,15 +194,15 @@ function VoteRowItem({ row }: { row: VoteRow }) {
     >
       <div class="vrow__rail">
         <span class="vrow__id">Ä {row.votingNumber}</span>
-        <span class="vrow__time">{esc(row.time)}</span>
+        <span class="vrow__time">{row.time}</span>
       </div>
       <div class="vrow__main">
-        <span class="vrow__q">{esc(row.questionText || row.title)}</span>
+        <span class="vrow__q">{row.questionText || row.title}</span>
         {row.documents.length > 0 && (
           <div class="vrow__docs">
             {row.documents.map((doc) => (
               <span class={clsx("ag-doc", doc.isCommittee && "cmt")}>
-                {esc(doc.label)}
+                {doc.label}
               </span>
             ))}
           </div>
@@ -213,7 +212,7 @@ function VoteRowItem({ row }: { row: VoteRow }) {
             {row.references.map((ref, i) => (
               <>
                 {i > 0 && " · "}
-                <span class="ref">{esc(ref.label)}</span>
+                <span class="ref">{ref.label}</span>
               </>
             ))}
           </div>

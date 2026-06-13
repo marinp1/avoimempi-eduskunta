@@ -5,6 +5,7 @@ import { withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
+import { esc } from "#server/helpers/template-helpers";
 export function createVotingRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/aanestys/:id",
@@ -16,7 +17,7 @@ export function createVotingRoute(deps: WebappDeps) {
       });
       if (!voting) {
         return {
-          fragment: `<section class="page-hero"><h1>${i18next.t("common:vote_not_found")}</h1><p>${i18next.t("common:vote_not_found_id", { id })}</p></section>`,
+          fragment: `<section class="page-hero"><h1>${i18next.t("common:vote_not_found")}</h1><p>${i18next.t("common:vote_not_found_id", { id: esc(id) })}</p></section>`,
           activePath: `/aanestys/${id}`,
           title: i18next.t("common:vote_not_found"),
         };

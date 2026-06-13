@@ -6,7 +6,6 @@ import i18next from "i18next";
 import {
   type RosterParams,
   buildBlocBar,
-  esc,
   partyShortName,
 } from "#server/helpers/template-helpers";
 import RosterContent from "../fragments/roster-content.fragment";
@@ -99,7 +98,7 @@ export default function Edustajat({
               id="mp-search"
               name="q"
               type="text"
-              value={esc(q)}
+              value={q}
               placeholder={i18next.t("persons:search_placeholder")}
               hx-get="/edustajat"
               hx-trigger="input changed delay:300ms"

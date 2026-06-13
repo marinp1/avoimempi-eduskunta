@@ -1,7 +1,6 @@
 /** @jsxImportSource ../../../jsx */
 import { clsx } from "clsx";
 import Kicker from "#server/components/kicker";
-import { esc } from "#server/helpers/template-helpers";
 import { cite, sourceNote } from "#server/components/provenance";
 import i18next from "i18next";
 import type { SingleVoteData } from "./detail.view-model";
@@ -42,13 +41,13 @@ export default function Aanestys({ title, data }: Props) {
           </a>
           &nbsp;›&nbsp;{" "}
           <a
-            href={`/istunto/${esc(v.sessionKey)}`}
+            href={`/istunto/${v.sessionKey}`}
             class="link-clr"
-            hx-get={`/istunto/${esc(v.sessionKey)}`}
+            hx-get={`/istunto/${v.sessionKey}`}
             {...NAV}
           >
             {i18next.t("votings:detail.breadcrumb_session", {
-              key: esc(v.sessionKey),
+              key: v.sessionKey,
             })}
           </a>
           &nbsp;›&nbsp;{" "}
@@ -65,7 +64,7 @@ export default function Aanestys({ title, data }: Props) {
               {cite(
                 i18next.t("votings:detail.doc_id_format", {
                   number: v.votingNumber,
-                  sessionKey: esc(v.sessionKey),
+                  sessionKey: v.sessionKey,
                 }),
                 data.provenance,
               )}
@@ -83,7 +82,7 @@ export default function Aanestys({ title, data }: Props) {
               {v.outcomeLabel}
             </span>
           </div>
-          <h1>{esc(v.title)}</h1>
+          <h1>{v.title}</h1>
           <div class="sess-meta">
             <span>
               <b>{v.dateLabel}</b>
@@ -94,9 +93,9 @@ export default function Aanestys({ title, data }: Props) {
               <>
                 <span class="sep"></span>
                 <a
-                  href={`/asiakohta/${esc(v.sectionKey)}`}
+                  href={`/asiakohta/${v.sectionKey}`}
                   class="link-clr"
-                  hx-get={`/asiakohta/${esc(v.sectionKey)}`}
+                  hx-get={`/asiakohta/${v.sectionKey}`}
                   {...NAV}
                 >
                   {i18next.t("votings:detail.section_link", {
@@ -107,9 +106,9 @@ export default function Aanestys({ title, data }: Props) {
             )}
             <span class="sep"></span>
             <a
-              href={`/istunto/${esc(v.sessionKey)}`}
+              href={`/istunto/${v.sessionKey}`}
               class="link-clr"
-              hx-get={`/istunto/${esc(v.sessionKey)}`}
+              hx-get={`/istunto/${v.sessionKey}`}
               {...NAV}
             >
               {i18next.t("common:open_istunto")}
@@ -120,9 +119,9 @@ export default function Aanestys({ title, data }: Props) {
         <div class="doc-toolbar">
           {v.sectionKey && (
             <a
-              href={`/asiakohta/${esc(v.sectionKey)}`}
+              href={`/asiakohta/${v.sectionKey}`}
               class="tbtn"
-              hx-get={`/asiakohta/${esc(v.sectionKey)}`}
+              hx-get={`/asiakohta/${v.sectionKey}`}
               {...NAV}
             >
               <span class="ic">▤</span>
@@ -149,13 +148,13 @@ export default function Aanestys({ title, data }: Props) {
             {v.yesProposition && (
               <span class="prop">
                 <span class="k j">{i18next.t("common:yes_uppercase")}</span>
-                {esc(v.yesProposition)}
+                {v.yesProposition}
               </span>
             )}
             {v.noProposition && (
               <span class="prop">
                 <span class="k e">{i18next.t("common:no_uppercase")}</span>
-                {esc(v.noProposition)}
+                {v.noProposition}
               </span>
             )}
           </div>
@@ -285,7 +284,7 @@ export default function Aanestys({ title, data }: Props) {
                       class="d"
                       style={`background:${pb.partyColor}`}
                     ></span>
-                    {esc(pb.partyName)}
+                    {pb.partyName}
                   </div>
                   <div class="pvote__bar">
                     <span
@@ -350,7 +349,7 @@ export default function Aanestys({ title, data }: Props) {
                     {...NAV}
                     class="agvote"
                   >
-                    <div class="agvote__t">{esc(rv.title)}</div>
+                    <div class="agvote__t">{rv.title}</div>
                     <div class="agvote__bar">
                       <span
                         class="j"

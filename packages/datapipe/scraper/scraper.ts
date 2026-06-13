@@ -1,6 +1,7 @@
 import { scheduler } from "node:timers/promises";
 import type { TableName } from "#constants";
 import { isAlwaysFullScrapeTable } from "#constants";
+import { fetchWithRetry } from "./fetch-retry";
 import { getRawRowStore } from "#storage/row-store/factory";
 import {
   getExactTableCountByRows,
@@ -35,9 +36,13 @@ interface EduskuntaApiResponse {
  * Get column information for a table
  */
 async function getTableColumns(tableName: string) {
-  const resp = await fetch(
-    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/columns`,
-  );
+  const url = `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/columns`;
+  const resp = await fetchWithRetry(url);
+  if (!resp.ok) {
+    throw new Error(
+      `Failed to fetch columns for ${tableName}: HTTP ${resp.status} ${resp.statusText}`,
+    );
+  }
   const { pkName, columnNames } = (await resp.json()) as {
     pkName: string;
     columnNames: string[];
@@ -224,7 +229,7 @@ export async function scrapeTable(
         peekUrl.searchParams.set("perPage", "1");
         peekUrl.searchParams.set("pkStartValue", String(localMaxPk + 1));
 
-        const peekResp = await fetch(peekUrl.toString());
+        const peekResp = await fetchWithRetry(peekUrl.toString());
         if (peekResp.ok) {
           const peekData = (await peekResp.json()) as EduskuntaApiResponse;
           hasNewRowsBeyondLocalMax = peekData.rowCount > 0;
@@ -322,7 +327,7 @@ export async function scrapeTable(
 
       console.log(`📡 Fetching batch from PK ${pkStartValue}...`);
 
-      const response = await fetch(baseUrl.toString(), {
+      const response = await fetchWithRetry(baseUrl.toString(), {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });

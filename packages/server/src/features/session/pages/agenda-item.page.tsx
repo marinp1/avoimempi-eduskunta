@@ -2,7 +2,6 @@
 import { clsx } from "clsx";
 import i18next from "i18next";
 import Kicker from "#server/components/kicker";
-import { esc } from "#server/helpers/template-helpers";
 import type { AsiakohtaData } from "./section.view-model";
 
 const NAV = {
@@ -41,12 +40,12 @@ export default function Asiakohta({
           </a>
           &nbsp;›&nbsp;{" "}
           <a
-            href={`/istunto/${esc(sec.sessionKey)}`}
+            href={`/istunto/${sec.sessionKey}`}
             style="color:var(--blue)"
-            hx-get={`/istunto/${esc(sec.sessionKey)}`}
+            hx-get={`/istunto/${sec.sessionKey}`}
             {...NAV}
           >
-            {esc(sec.sessionTitle)}
+            {sec.sessionTitle}
           </a>
           {sec.itemNumber && (
             <>
@@ -67,8 +66,8 @@ export default function Asiakohta({
           {data.prevSection ? (
             <a
               class="subnav__side prev"
-              href={`/asiakohta/${esc(data.prevSection.key)}`}
-              hx-get={`/asiakohta/${esc(data.prevSection.key)}`}
+              href={`/asiakohta/${data.prevSection.key}`}
+              hx-get={`/asiakohta/${data.prevSection.key}`}
               {...NAV}
             >
               <span class="subnav__dir">
@@ -77,15 +76,15 @@ export default function Asiakohta({
                   ? `${i18next.t("components:asiakohta.breadcrumb_item", { number: data.prevSection.itemNumber })}`
                   : i18next.t("components:asiakohta.prev_label")}
               </span>
-              <span class="subnav__t">{esc(data.prevSection.title)}</span>
+              <span class="subnav__t">{data.prevSection.title}</span>
             </a>
           ) : (
             <a class="subnav__side prev" style="visibility:hidden"></a>
           )}
           <a
             class="subnav__mid"
-            href={`/istunto/${esc(sec.sessionKey)}`}
-            hx-get={`/istunto/${esc(sec.sessionKey)}`}
+            href={`/istunto/${sec.sessionKey}`}
+            hx-get={`/istunto/${sec.sessionKey}`}
             {...NAV}
           >
             <span class="subnav__pos">
@@ -98,8 +97,8 @@ export default function Asiakohta({
           {data.nextSection ? (
             <a
               class="subnav__side next"
-              href={`/asiakohta/${esc(data.nextSection.key)}`}
-              hx-get={`/asiakohta/${esc(data.nextSection.key)}`}
+              href={`/asiakohta/${data.nextSection.key}`}
+              hx-get={`/asiakohta/${data.nextSection.key}`}
               {...NAV}
             >
               <span class="subnav__dir">
@@ -108,7 +107,7 @@ export default function Asiakohta({
                   : i18next.t("components:asiakohta.next_label")}{" "}
                 ›
               </span>
-              <span class="subnav__t">{esc(data.nextSection.title)}</span>
+              <span class="subnav__t">{data.nextSection.title}</span>
             </a>
           ) : (
             <a class="subnav__side next" style="visibility:hidden"></a>
@@ -121,24 +120,24 @@ export default function Asiakohta({
               {sec.itemNumber
                 ? i18next.t("components:asiakohta.doc_id_format", {
                     number: sec.itemNumber,
-                    sessionKey: esc(sec.sessionKey),
+                    sessionKey: sec.sessionKey,
                   })
-                : `PTK ${esc(sec.sessionKey)} vp`}
+                : `PTK ${sec.sessionKey} vp`}
             </span>
             <span class="doc-type">
               {sec.processingTitle
                 ? i18next.t("components:asiakohta.section_type_format", {
-                    processing: esc(sec.processingTitle),
+                    processing: sec.processingTitle,
                   })
                 : i18next.t("components:asiakohta.section_type")}
             </span>
             {sec.identifier && (
               <span class="tag tag--ghost" style="margin-left:auto">
-                {esc(sec.identifier)}
+                {sec.identifier}
               </span>
             )}
           </div>
-          <h1>{esc(sec.title)}</h1>
+          <h1>{sec.title}</h1>
           <div class="sess-meta">
             <span>
               <b>{sec.sessionDateLabel}</b>
@@ -153,9 +152,9 @@ export default function Asiakohta({
             <span>{sec.phase}</span>
             <span class="sep"></span>
             <a
-              href={`/istunto/${esc(sec.sessionKey)}`}
+              href={`/istunto/${sec.sessionKey}`}
               style="color:var(--blue)"
-              hx-get={`/istunto/${esc(sec.sessionKey)}`}
+              hx-get={`/istunto/${sec.sessionKey}`}
               {...NAV}
             >
               {i18next.t("common:open_istunto")}
@@ -225,7 +224,7 @@ export default function Asiakohta({
                 {i18next.t("components:asiakohta.ai_summary_label")}
               </span>
             </div>
-            <p class="ai__body">{esc(sec.note)}</p>
+            <p class="ai__body">{sec.note}</p>
             <div class="ai__foot">
               <span>{i18next.t("components:asiakohta.ai_disclaimer")}</span>
             </div>
@@ -252,11 +251,11 @@ export default function Asiakohta({
                     <span class="lc-step__dot"></span>
                     <span class="lc-step__num">{step.stepNumber ?? ""}</span>
                   </div>
-                  <div class="lc-step__label">{esc(step.label)}</div>
+                  <div class="lc-step__label">{step.label}</div>
                   {step.date && <div class="lc-step__date">{step.date}</div>}
                   {step.tag && (
                     <div class={clsx("lc-step__tag", step.tagClass)}>
-                      {esc(step.tag)}
+                      {step.tag}
                     </div>
                   )}
                 </div>
@@ -283,7 +282,7 @@ export default function Asiakohta({
                   </div>
                   <ul>
                     {data.viewpoints.for.map((pt) => (
-                      <li>{esc(pt)}</li>
+                      <li>{pt}</li>
                     ))}
                   </ul>
                 </div>
@@ -297,7 +296,7 @@ export default function Asiakohta({
                   </div>
                   <ul>
                     {data.viewpoints.against.map((pt) => (
-                      <li>{esc(pt)}</li>
+                      <li>{pt}</li>
                     ))}
                   </ul>
                 </div>
@@ -331,7 +330,7 @@ export default function Asiakohta({
                       {...NAV}
                       style="color:var(--blue);text-decoration:none"
                     >
-                      {esc(vo.title)}
+                      {vo.title}
                     </a>
                   </span>
                 </div>
@@ -426,7 +425,7 @@ export default function Asiakohta({
               {data.speeches.map((sp) => (
                 <article class="speech" data-bloc={sp.bloc}>
                   <div class="speech__av">
-                    <span>{esc(sp.initials)}</span>
+                    <span>{sp.initials}</span>
                     <span
                       class="pbar"
                       style={`background:${sp.partyColor}`}
@@ -435,16 +434,16 @@ export default function Asiakohta({
                   <div class="speech__main">
                     <div class="speech__head">
                       <span class="speech__name">
-                        {esc(sp.firstName)} {esc(sp.lastName)}
+                        {sp.firstName} {sp.lastName}
                       </span>
                       <span class="tag">
                         <span
                           style={`width:9px;height:9px;border-radius:50%;background:${sp.partyColor};display:inline-block`}
                         ></span>{" "}
-                        {esc(sp.partyName)}
+                        {sp.partyName}
                       </span>
                       <span class={clsx("speech__role", sp.roleClass)}>
-                        {esc(sp.roleLabel)}
+                        {sp.roleLabel}
                       </span>
                       <span class="speech__time">
                         {sp.timeLabel}
@@ -457,13 +456,13 @@ export default function Asiakohta({
                           <span class="sp">✦</span>
                           {i18next.t("components:keskustelu.speech_ai_tag")}
                         </span>
-                        <p>{esc(sp.summary)}</p>
+                        <p>{sp.summary}</p>
                       </div>
                     )}
                     {sp.fullText && (
                       <div class="speech__body">
                         {sp.fullText.split("\n\n").map((para) => (
-                          <p>{esc(para)}</p>
+                          <p>{para}</p>
                         ))}
                       </div>
                     )}
@@ -499,17 +498,15 @@ export default function Asiakohta({
               </div>
               <div class="decision__main">
                 <div class="t">
-                  {esc(
-                    data.section.resolution ??
-                      i18next.t("components:asiakohta.decision_default"),
-                  )}
+                  {data.section.resolution ??
+                    i18next.t("components:asiakohta.decision_default")}
                 </div>
               </div>
             </div>
             <div style="display:flex;justify-content:flex-end;margin-top:18px">
               <a
-                href={`/istunto/${esc(sec.sessionKey)}`}
-                hx-get={`/istunto/${esc(sec.sessionKey)}`}
+                href={`/istunto/${sec.sessionKey}`}
+                hx-get={`/istunto/${sec.sessionKey}`}
                 {...NAV}
                 class="link-arrow"
               >
@@ -527,8 +524,8 @@ export default function Asiakohta({
             {data.prevSection ? (
               <a
                 class="subnav__side prev"
-                href={`/asiakohta/${esc(data.prevSection.key)}`}
-                hx-get={`/asiakohta/${esc(data.prevSection.key)}`}
+                href={`/asiakohta/${data.prevSection.key}`}
+                hx-get={`/asiakohta/${data.prevSection.key}`}
                 {...NAV}
               >
                 <span class="subnav__dir">
@@ -537,15 +534,15 @@ export default function Asiakohta({
                     ? `${i18next.t("components:asiakohta.breadcrumb_item", { number: data.prevSection.itemNumber })}`
                     : i18next.t("components:asiakohta.prev_label")}
                 </span>
-                <span class="subnav__t">{esc(data.prevSection.title)}</span>
+                <span class="subnav__t">{data.prevSection.title}</span>
               </a>
             ) : (
               <span></span>
             )}
             <a
               class="subnav__mid"
-              href={`/istunto/${esc(sec.sessionKey)}`}
-              hx-get={`/istunto/${esc(sec.sessionKey)}`}
+              href={`/istunto/${sec.sessionKey}`}
+              hx-get={`/istunto/${sec.sessionKey}`}
               {...NAV}
             >
               <span class="subnav__pos">
@@ -558,8 +555,8 @@ export default function Asiakohta({
             {data.nextSection ? (
               <a
                 class="subnav__side next"
-                href={`/asiakohta/${esc(data.nextSection.key)}`}
-                hx-get={`/asiakohta/${esc(data.nextSection.key)}`}
+                href={`/asiakohta/${data.nextSection.key}`}
+                hx-get={`/asiakohta/${data.nextSection.key}`}
                 {...NAV}
               >
                 <span class="subnav__dir">
@@ -568,7 +565,7 @@ export default function Asiakohta({
                     : i18next.t("components:asiakohta.next_label")}{" "}
                   ›
                 </span>
-                <span class="subnav__t">{esc(data.nextSection.title)}</span>
+                <span class="subnav__t">{data.nextSection.title}</span>
               </a>
             ) : (
               <span></span>

@@ -1,6 +1,5 @@
 import type { Database } from "bun:sqlite";
 import type { DocumentService } from "../../src/features/document/document.service";
-import type { HomeService } from "../../src/features/home/home.service";
 import type { MetadataService } from "../../src/features/metadata/metadata.service";
 import type { PersonService } from "../../src/features/person/person.service";
 import type { SessionService } from "../../src/features/session/session.service";
@@ -20,7 +19,6 @@ export interface WebappDeps {
   documentRepository: DocumentRepository;
   documentService: DocumentService;
   homeRepository: HomeRepository;
-  homeService: HomeService;
   metadataRepository: MetadataRepository;
   metadataService: MetadataService;
   personRepository: PersonRepository;

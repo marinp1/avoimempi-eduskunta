@@ -1,7 +1,6 @@
 /** @jsxImportSource ../../../jsx */
 import { clsx } from "clsx";
 import Kicker from "#server/components/kicker";
-import { esc } from "#server/helpers/template-helpers";
 import i18next from "i18next";
 import type { SingleVoteData } from "../pages/detail.view-model";
 
@@ -46,7 +45,7 @@ export default function VotingMapFragment({ mpVotes }: Props) {
                     mp.vote === "tuntematon" && "unknown-vote",
                   )}
                   style={`--p:${seatColor}`}
-                  title={`${esc(mp.firstName)} ${esc(mp.lastName)} (${esc(mp.partyCode)}) — ${mp.vote === "jaa" ? "Jaa" : mp.vote === "ei" ? "Ei" : mp.vote === "tyhjaa" ? "Tyhjää" : mp.vote === "poissa" ? "Poissa" : "Tuntematon"}`}
+                  title={`${mp.firstName} ${mp.lastName} (${mp.partyCode}) — ${mp.vote === "jaa" ? "Jaa" : mp.vote === "ei" ? "Ei" : mp.vote === "tyhjaa" ? "Tyhjää" : mp.vote === "poissa" ? "Poissa" : "Tuntematon"}`}
                 ></span>
               );
             })}
@@ -99,8 +98,8 @@ export default function VotingMapFragment({ mpVotes }: Props) {
                 data-search={`${mp.firstName} ${mp.lastName} ${mp.partyCode}`.toLowerCase()}
               >
                 <span class="mn">
-                  {esc(mp.firstName)} {esc(mp.lastName)}
-                  <small>{esc(mp.partyCode)}</small>
+                  {mp.firstName} {mp.lastName}
+                  <small>{mp.partyCode}</small>
                 </span>
                 <span
                   class={clsx(

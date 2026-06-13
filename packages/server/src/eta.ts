@@ -1,4 +1,5 @@
 import Layout from "./layouts/base";
+import { trustedHtml } from "./jsx/jsx-runtime";
 import type { TimelineData } from "./layouts/timeline";
 import type { PeriodSelectorData } from "./helpers/period-selector-data";
 
@@ -19,21 +20,26 @@ export interface LayoutOptions {
 /**
  * Renders a complete HTML page by wrapping the given content fragment
  * inside the shared layout (masthead, nav, footer).
+ *
+ * The fragment is route template output (JSX or a hand-built HTML string with
+ * its data already escaped), so it is passed to the layout as trusted HTML.
  */
 export function renderFullPage(
   fragment: string,
   options: LayoutOptions,
 ): string {
-  return Layout({
-    content: fragment,
-    finnishDate: new Date().toLocaleDateString("fi-FI", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+  return String(
+    Layout({
+      content: trustedHtml(String(fragment)),
+      finnishDate: new Date().toLocaleDateString("fi-FI", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+      ...options,
     }),
-    ...options,
-  });
+  );
 }
 
 /**
@@ -41,7 +47,7 @@ export function renderFullPage(
  * Used by htmx to swap partial page content.
  */
 export function fragmentResponse(html: string): Response {
-  return new Response(html, {
+  return new Response(String(html), {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       Vary: "HX-Request",

@@ -18,7 +18,6 @@ import { PersonRepository } from "./src/features/person/person.repository";
 import { SessionRepository } from "./src/features/session/session.repository";
 import { VotingRepository } from "./src/features/voting/voting.repository";
 import { DocumentService } from "./src/features/document/document.service";
-import { HomeService } from "./src/features/home/home.service";
 import { MetadataService } from "./src/features/metadata/metadata.service";
 import { PersonService } from "./src/features/person/person.service";
 import { SessionService } from "./src/features/session/session.service";
@@ -72,49 +71,7 @@ const readTimestamp = async (filePath: string): Promise<string | null> => {
   return text || null;
 };
 
-const homeRepository = new HomeRepository(
-  sessionRepository,
-  analyticsRepository,
-  {
-    fetchLastMigrationTimestamp: () => {
-      try {
-        return (
-          db
-            .query<{ value: string }, []>(
-              `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
-            )
-            .get()?.value ?? null
-        );
-      } catch {
-        return null;
-      }
-    },
-    fetchLastScraperRunAt: () => readTimestamp(getLastScraperRunAtPath()),
-    fetchLastMigratorRunAt: () => readTimestamp(getLastMigratorRunAtPath()),
-  },
-);
-
-const homeService = new HomeService(sessionRepository, analyticsRepository, {
-  fetchLastMigrationTimestamp: () => {
-    try {
-      return (
-        db
-          .query<{ value: string }, []>(
-            `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
-          )
-          .get()?.value ?? null
-      );
-    } catch {
-      return null;
-    }
-  },
-  fetchLastScraperRunAt: () => readTimestamp(getLastScraperRunAtPath()),
-  fetchLastMigratorRunAt: () => readTimestamp(getLastMigratorRunAtPath()),
-});
-
-const { isDev, port, idleTimeout, reusePort } = loadRuntimeConfig();
-
-const generationKey = (() => {
+const fetchLastMigrationTimestamp = (): string | null => {
   try {
     return (
       db
@@ -126,7 +83,21 @@ const generationKey = (() => {
   } catch {
     return null;
   }
-})();
+};
+
+const homeRepository = new HomeRepository(
+  sessionRepository,
+  analyticsRepository,
+  {
+    fetchLastMigrationTimestamp,
+    fetchLastScraperRunAt: () => readTimestamp(getLastScraperRunAtPath()),
+    fetchLastMigratorRunAt: () => readTimestamp(getLastMigratorRunAtPath()),
+  },
+);
+
+const { isDev, port, idleTimeout, reusePort } = loadRuntimeConfig();
+
+const generationKey = fetchLastMigrationTimestamp();
 
 const cache = createResponseCache({
   generationKey: isDev ? "dev" : generationKey,
@@ -155,7 +126,6 @@ const allRoutes = withSecurityHeaders({
       documentRepository,
       documentService,
       homeRepository,
-      homeService,
       metadataRepository,
       metadataService,
       personRepository,

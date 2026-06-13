@@ -16,6 +16,7 @@ export type {
 export { buildBlocBar } from "#server/features/person/pages/roster-shared.view-model";
 
 export { formatFi, fetchedAt, isHtmx } from "#server/helpers";
+export { trustedHtml } from "../jsx/jsx-runtime";
 
 /** A party's composition data for the home page overview. */
 export type {

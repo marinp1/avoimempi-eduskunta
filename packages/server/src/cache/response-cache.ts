@@ -16,10 +16,10 @@ export type ResponseCacheOptions = {
   /** Time-to-live per entry in milliseconds. Default: 5 minutes. */
   ttlMs?: number;
   /**
-   * Maximum number of entries in the cache. When the ceiling is reached, new
-   * entries are not inserted (existing entries continue to be served). This
-   * prevents unbounded memory growth from large query-string parameter spaces.
-   * Default: 2000.
+   * Maximum number of entries in the cache. When the ceiling is reached,
+   * expired entries are purged first; if still full, the oldest entry is
+   * evicted (FIFO) to admit the new one. This prevents unbounded memory
+   * growth from large query-string parameter spaces. Default: 2000.
    */
   maxEntries?: number;
 };
@@ -72,7 +72,11 @@ export function createResponseCache(
       for (const [k, v] of store) {
         if (v.expiresAt <= now) store.delete(k);
       }
-      if (store.size >= maxEntries) return;
+      while (store.size >= maxEntries) {
+        const oldestKey = store.keys().next().value;
+        if (oldestKey === undefined) break;
+        store.delete(oldestKey);
+      }
     }
     store.set(key, entry);
   }
@@ -99,8 +103,9 @@ export function createResponseCache(
 
       const response = await handler(req);
 
-      // Cache 2xx and 4xx; never cache 5xx (those indicate transient errors).
-      if (response.status < 500) {
+      // Cache only 2xx. 5xx are transient; 4xx are skipped so error pages that
+      // reflect request input never linger in (or fill up) the shared cache.
+      if (response.ok) {
         const body = await response.text();
         set(key, {
           body,
