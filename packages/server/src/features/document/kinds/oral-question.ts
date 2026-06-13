@@ -69,6 +69,7 @@ export function buildOralQuestion(
     textSections,
     lifecycleStages,
     hasAnswer: false,
+    answerTextSections: [],
     answerIdentifier: null,
     answerDate: null,
     answerMinisterTitle: null,

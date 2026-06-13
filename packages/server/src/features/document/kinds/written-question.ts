@@ -77,6 +77,7 @@ export function buildWrittenQuestion(
   );
   if (qs) textSections.push(qs);
 
+  const answerTextSections: TextSection[] = [];
   const answerBody = (detail as any).response_body_text as string | null;
   if (answerBody) {
     const as = buildTextSection(
@@ -84,7 +85,7 @@ export function buildWrittenQuestion(
       answerBody,
       null,
     );
-    if (as) textSections.push(as);
+    if (as) answerTextSections.push(as);
   }
 
   const signatories: Signatory[] = mapMpSignatories(detail.signers ?? []);
@@ -153,10 +154,13 @@ export function buildWrittenQuestion(
     answerDate,
     answerMinisterTitle: detail.answer_minister_title,
     answerMinisterName:
-      authorsByName(
-        detail.answer_minister_first_name,
-        detail.answer_minister_last_name,
-      ) || null,
+      detail.answer_minister_first_name || detail.answer_minister_last_name
+        ? authorsByName(
+            detail.answer_minister_first_name,
+            detail.answer_minister_last_name,
+          )
+        : null,
+    answerTextSections,
     signatories,
     laws: [],
     sourceReference: null,

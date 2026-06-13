@@ -60,6 +60,7 @@ function buildExpertStatementDetail(
     textSections,
     lifecycleStages: [],
     hasAnswer: false,
+    answerTextSections: [],
     answerIdentifier: null,
     answerDate: null,
     answerMinisterTitle: null,

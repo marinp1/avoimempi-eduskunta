@@ -61,6 +61,9 @@ export interface AsiakirjaViewModel {
 
   textSections: TextSection[];
 
+  /** Text sections for the minister's answer (mutually exclusive with textSections for question body). */
+  answerTextSections: TextSection[];
+
   lifecycleStages: Array<{
     step: number;
     label: string;
@@ -396,6 +399,21 @@ export default function Asiakirja({ data }: Props) {
                   </ul>
                 </div>
               </div>
+
+              {d.answerTextSections.length > 0 &&
+                d.answerTextSections.map((section) => (
+                  <>
+                    {section.html
+                      ? section.html
+                      : section.paragraphs.map((para, pi) =>
+                          pi === 0 ? (
+                            <p class="standfirst">{esc(para)}</p>
+                          ) : (
+                            <p>{esc(para)}</p>
+                          ),
+                        )}
+                  </>
+                ))}
 
               <div class="mt-14">
                 <a
