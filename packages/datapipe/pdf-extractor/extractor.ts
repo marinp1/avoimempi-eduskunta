@@ -78,52 +78,54 @@ export async function extractPdfText(
 
   const existingTexts = getAllDocumentTexts(db);
 
-  let processed = 0;
+  try {
+    for (const record of fileRecords) {
+      if (options.limit !== undefined && results.length >= options.limit) break;
 
-  for (const record of fileRecords) {
-    if (options.limit !== undefined && processed >= options.limit) break;
+      const edk = record.edk_identifier;
+      const result: ExtractResult = {
+        edk_identifier: edk,
+        document_type: record.document_type,
+        storage_key: record.storage_key,
+        file_size_bytes: record.file_size_bytes,
+        extracted: false,
+      };
 
-    const edk = record.edk_identifier;
-    const result: ExtractResult = {
-      edk_identifier: edk,
-      document_type: record.document_type,
-      storage_key: record.storage_key,
-      file_size_bytes: record.file_size_bytes,
-      extracted: false,
-    };
-
-    if (existingTexts.has(edk)) {
-      result.extracted = true;
-      result.body_text = existingTexts.get(edk);
-      result.text_length = result.body_text?.length ?? 0;
-      results.push(result);
-      continue;
-    }
-
-    if (options.dryRun) {
-      results.push(result);
-      continue;
-    }
-
-    try {
-      const pdfBuffer = await handler.get(record.storage_key);
-      const extracted = await extractText(pdfBuffer, { mergePages: true });
-      const bodyText = extracted.text.trim();
-
-      if (bodyText) {
-        upsertDocumentText(db, edk, bodyText, new Date().toISOString());
+      if (existingTexts.has(edk)) {
         result.extracted = true;
-        result.body_text = bodyText;
-        result.text_length = bodyText.length;
+        result.body_text = existingTexts.get(edk);
+        result.text_length = result.body_text?.length ?? 0;
+        results.push(result);
+        continue;
       }
-    } catch (err) {
-      result.error = err instanceof Error ? err.message : String(err);
-    }
 
-    results.push(result);
-    processed++;
+      if (options.dryRun) {
+        results.push(result);
+        continue;
+      }
+
+      try {
+        const pdfBuffer = await handler.get(record.storage_key);
+        const extracted = await extractText(new Uint8Array(pdfBuffer), {
+          mergePages: true,
+        });
+        const bodyText = extracted.text.trim();
+
+        if (bodyText) {
+          upsertDocumentText(db, edk, bodyText, new Date().toISOString());
+          result.extracted = true;
+          result.body_text = bodyText;
+          result.text_length = bodyText.length;
+        }
+      } catch (err) {
+        result.error = err instanceof Error ? err.message : String(err);
+      }
+
+      results.push(result);
+    }
+  } finally {
+    db.close();
   }
 
-  db.close();
   return results;
 }

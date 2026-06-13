@@ -15,6 +15,7 @@ import {
   rebuildVotingPartyStats,
 } from "./post-import";
 import { TABLE_MIGRATORS } from "./table-migrators";
+import { getAllDocumentTexts } from "../document-fetcher/db.ts";
 import { rebuildTraceDatabase } from "./trace-db";
 import { clearStatementCache } from "./utils";
 
@@ -145,16 +146,8 @@ function loadDocumentTextMap(): Map<string, string> {
   const documentsDbPath = getDocumentsDatabasePath();
   try {
     const docsDb = sqlite.open(documentsDbPath, { readonly: true });
-    const rows = docsDb
-      .query<{ edk_identifier: string; body_text: string }, []>(
-        "SELECT edk_identifier, body_text FROM DocumentText",
-      )
-      .all();
+    const map = getAllDocumentTexts(docsDb);
     docsDb.close();
-    const map = new Map<string, string>();
-    for (const row of rows) {
-      map.set(row.edk_identifier, row.body_text);
-    }
     console.log(
       `📄 Loaded ${map.size} PDF-extracted text records from documents database`,
     );

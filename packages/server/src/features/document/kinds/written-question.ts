@@ -89,6 +89,12 @@ export function buildWrittenQuestion(
 
   const signatories: Signatory[] = mapMpSignatories(detail.signers ?? []);
 
+  const hasSigner =
+    detail.first_signer_first_name || detail.first_signer_last_name;
+  const hasMinister =
+    detail.answer_minister_first_name || detail.answer_minister_last_name;
+  const showMinister = !hasSigner && hasMinister;
+
   const authorParty = detail.first_signer_party ?? "";
   return {
     kind: "kk",
@@ -96,19 +102,34 @@ export function buildWrittenQuestion(
     identifier: detail.parliament_identifier,
     documentTypeLabel: i18next.t("documents:kind_labels.kk"),
     title: detail.title ?? "",
-    authorName: authorsByName(
-      detail.first_signer_first_name,
-      detail.first_signer_last_name,
-    ),
-    authorRole: i18next.t("documents:detail.mp_role"),
-    authorParty,
-    authorPartyColor: partyColor(authorParty),
-    authorPersonId: detail.first_signer_person_id,
-    authorInitials: initialsFrom(
-      detail.first_signer_first_name,
-      detail.first_signer_last_name,
-    ),
-    authorDistrict: mpDistrict(detail.first_signer_person_id, ctx.personRepo),
+    authorName: showMinister
+      ? authorsByName(
+          detail.answer_minister_first_name,
+          detail.answer_minister_last_name,
+        )
+      : authorsByName(
+          detail.first_signer_first_name,
+          detail.first_signer_last_name,
+        ),
+    authorRole: showMinister
+      ? (detail.answer_minister_title ??
+        i18next.t("documents:detail.minister_role"))
+      : i18next.t("documents:detail.mp_role"),
+    authorParty: showMinister ? null : authorParty,
+    authorPartyColor: showMinister ? partyColor("") : partyColor(authorParty),
+    authorPersonId: showMinister ? null : detail.first_signer_person_id,
+    authorInitials: showMinister
+      ? initialsFrom(
+          detail.answer_minister_first_name,
+          detail.answer_minister_last_name,
+        )
+      : initialsFrom(
+          detail.first_signer_first_name,
+          detail.first_signer_last_name,
+        ),
+    authorDistrict: showMinister
+      ? null
+      : mpDistrict(detail.first_signer_person_id, ctx.personRepo),
     primaryDate: formatFi(submissionDate),
     primaryDateLabel: i18next.t("documents:status_labels.submitted"),
     secondaryDate: answerDate ? formatFi(answerDate) : null,

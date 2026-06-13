@@ -24,7 +24,7 @@ export interface ProvenanceInfo {
 /** Maps raw API table names to display metadata. */
 export const TABLE_META: Record<
   string,
-  { displayName: string; endpoint: string }
+  { displayName: string; endpoint: string; host?: string }
 > = {
   SaliDBAanestys: {
     displayName: "Eduskunnan avoin data · Vote",
@@ -65,6 +65,7 @@ export const TABLE_META: Record<
   "edk-documents": {
     displayName: "Eduskunnan dokumentit · PDF",
     endpoint: "GET /api/v1/asiakirjat/edktunnus/:edktunnus/pdf",
+    host: "api.eduskunta.fi",
   },
   HetekaData: {
     displayName: "Eduskunnan avoin data · HetekaData",

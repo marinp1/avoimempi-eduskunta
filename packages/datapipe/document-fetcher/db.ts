@@ -47,8 +47,9 @@ export function openDocumentsDb(): Database {
   db.run(CREATE_TABLE_SQL);
   try {
     db.run("ALTER TABLE DocumentFile ADD COLUMN document_type TEXT");
-  } catch {
-    // column already exists
+  } catch (err) {
+    if (!(err instanceof Error) || !err.message.includes("duplicate column"))
+      throw err;
   }
   db.run(CREATE_DOCUMENT_TEXT_SQL);
   return db;

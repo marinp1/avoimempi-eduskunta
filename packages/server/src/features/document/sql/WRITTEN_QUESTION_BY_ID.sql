@@ -25,3 +25,5 @@ SELECT
 FROM WrittenQuestion q
 LEFT JOIN WrittenQuestionResponse r ON r.question_id = q.id
 WHERE q.id = $id
+ORDER BY r.id DESC
+LIMIT 1

@@ -52,11 +52,8 @@ function buildRecordUrl(
   return `${API_BASE}/${sourceTable}/batch?${params.toString()}`;
 }
 
-/** Resolve the API host for a source table's provenance chain. */
 function sourceHost(sourceTable: string): string {
-  return sourceTable === "edk-documents"
-    ? "api.eduskunta.fi"
-    : "avoindata.eduskunta.fi";
+  return TABLE_META[sourceTable]?.host ?? "avoindata.eduskunta.fi";
 }
 
 /** Cite data without the `children` (inner HTML) field — storable in view models. */

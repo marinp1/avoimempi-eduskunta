@@ -230,11 +230,10 @@ function loadSubMigrator(
   const originalMigrateRow = sub.migrateRow;
   return {
     ...sub,
-    migrateRow(row: VaskiEntry): void {
+    migrateRow(row: VaskiEntry): void | Promise<void> {
       (row as any)._documentText =
         documentTextMap.get(extractEdkIdentifier(row) ?? "") ?? null;
-      const result = originalMigrateRow(row);
-      if (isPromiseLike(result)) void result;
+      return originalMigrateRow(row);
     },
   };
 }

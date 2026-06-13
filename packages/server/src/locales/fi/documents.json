@@ -14,7 +14,10 @@
     "aloite": "Lakialoite",
     "mietinto": "Mietintö",
     "vastaus": "Kirjallinen vastaus",
-    "vastaus-edk": "Eduskunnan vastaus"
+    "vastaus-edk": "Eduskunnan vastaus",
+    "asiantuntijalausunto": "Asiantuntijalausunto",
+    "asiantuntijalausunnon_liite": "Asiantuntijalausunnon liite",
+    "asiantuntijasuunnitelma": "Asiantuntijasuunnitelma"
   },
   "chip_labels": {
     "kk": "Kirjalliset kysymykset",
@@ -69,6 +72,7 @@
     "first_signer": "Ensimmäinen allekirjoittaja",
     "signer": "Allekirjoittaja",
     "mp_role": "Kansanedustaja",
+    "minister_role": "Ministeri",
     "ministry_role": "Ministeriö",
     "committee_role": "Valiokunta",
     "expert_role": "Asiantuntija",
