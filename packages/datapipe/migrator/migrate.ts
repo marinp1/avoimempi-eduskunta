@@ -664,6 +664,10 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       `✅ Federated search index rebuilt (${federatedSearchRows} rows)`,
     );
 
+    console.log("\n📈 Gathering query planner statistics (ANALYZE)...");
+    targetDatabase.run("ANALYZE;");
+    console.log("✅ ANALYZE complete");
+
     console.log("\n📋 Generating changes report...");
     await generateAndSaveChangesReport(previousRebuildAt);
 
