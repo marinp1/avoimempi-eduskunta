@@ -9,7 +9,7 @@ import { getDocumentHandler } from "#storage/document-handler/factory";
 export interface ExtractOptions {
   limit?: number;
   dryRun?: boolean;
-  kind?: "expert" | "vastaus" | "all";
+  kind?: "expert" | "vastaus" | "kansalaisaloite" | "suullinen" | "all";
 }
 
 export interface ExtractResult {
@@ -31,6 +31,14 @@ const KIND_FILTERS: Record<string, { clause: string; label: string }> = {
   vastaus: {
     clause: "AND d.document_type = 'vastaus_kirjalliseen_kysymykseen'",
     label: "written question responses (vastaus_kirjalliseen_kysymykseen)",
+  },
+  kansalaisaloite: {
+    clause: "AND d.document_type = 'kansalaisaloite'",
+    label: "citizens' initiatives (kansalaisaloite)",
+  },
+  suullinen: {
+    clause: "AND d.document_type = 'suullinen_kysymys'",
+    label: "oral questions (suullinen_kysymys)",
   },
 };
 

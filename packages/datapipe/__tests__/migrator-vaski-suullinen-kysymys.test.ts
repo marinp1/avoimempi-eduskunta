@@ -70,7 +70,7 @@ describe("Vaski suullinen_kysymys submigrator", () => {
     clearStatementCache();
     reportLogDir = mkdtempSync(join(tmpdir(), "suullinen-kysymys-report-"));
     process.env.MIGRATOR_REPORT_LOG_DIR = reportLogDir;
-    db = createTestDb(17);
+    db = createTestDb(39);
     migrateRow = createSubMigrator(db).migrateRow;
   });
 

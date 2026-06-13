@@ -306,8 +306,8 @@ function parseKasittelytiedot(
 
 export default function createSuullinenKysymysSubMigrator(db: Database) {
   const insertQuestion = db.prepare(
-    `INSERT INTO OralQuestion (id, parliament_identifier, document_number, parliamentary_year, title, question_text, asker_text, submission_date, decision_outcome, decision_outcome_code, latest_stage_code, end_date, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO OralQuestion (id, parliament_identifier, document_number, parliamentary_year, title, question_text, asker_text, submission_date, decision_outcome, decision_outcome_code, latest_stage_code, end_date, source_path, body_text)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(parliament_identifier) DO UPDATE SET
        title = COALESCE(excluded.title, OralQuestion.title),
        question_text = COALESCE(excluded.question_text, OralQuestion.question_text),
@@ -317,7 +317,8 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
        decision_outcome_code = COALESCE(excluded.decision_outcome_code, OralQuestion.decision_outcome_code),
        latest_stage_code = COALESCE(excluded.latest_stage_code, OralQuestion.latest_stage_code),
        end_date = COALESCE(excluded.end_date, OralQuestion.end_date),
-       source_path = excluded.source_path
+       source_path = excluded.source_path,
+       body_text = COALESCE(excluded.body_text, OralQuestion.body_text)
      RETURNING id`,
   );
 
@@ -390,6 +391,7 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
 
       try {
         const data = parseKasittelytiedot(body, context);
+        const bodyText = (row as any)._documentText as string | null;
 
         const questionRow = insertQuestion.get(
           id,
@@ -405,6 +407,7 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
           data.latest_stage_code,
           data.end_date,
           sourcePath,
+          bodyText,
         );
 
         const questionId =

@@ -325,8 +325,8 @@ function parseKasittelytiedot(
 
 export default function createKansalaisaloiteSubMigrator(db: Database) {
   const insertInitiative = db.prepare(
-    `INSERT INTO LegislativeInitiative (id, initiative_type_code, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, first_signer_first_name, first_signer_last_name, first_signer_party, decision_outcome, decision_outcome_code, latest_stage_code, end_date, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO LegislativeInitiative (id, initiative_type_code, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, first_signer_first_name, first_signer_last_name, first_signer_party, decision_outcome, decision_outcome_code, latest_stage_code, end_date, source_path, body_text)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(parliament_identifier) DO UPDATE SET
        title = COALESCE(excluded.title, LegislativeInitiative.title),
        submission_date = COALESCE(excluded.submission_date, LegislativeInitiative.submission_date),
@@ -338,7 +338,8 @@ export default function createKansalaisaloiteSubMigrator(db: Database) {
        decision_outcome_code = COALESCE(excluded.decision_outcome_code, LegislativeInitiative.decision_outcome_code),
        latest_stage_code = COALESCE(excluded.latest_stage_code, LegislativeInitiative.latest_stage_code),
        end_date = COALESCE(excluded.end_date, LegislativeInitiative.end_date),
-       source_path = excluded.source_path
+       source_path = excluded.source_path,
+       body_text = COALESCE(excluded.body_text, LegislativeInitiative.body_text)
      RETURNING id`,
   );
 
@@ -418,6 +419,7 @@ export default function createKansalaisaloiteSubMigrator(db: Database) {
 
       try {
         const data = parseKasittelytiedot(body, context);
+        const bodyText = (row as any)._documentText as string | null;
 
         const initiativeRow = insertInitiative.get(
           id,
@@ -436,6 +438,7 @@ export default function createKansalaisaloiteSubMigrator(db: Database) {
           data.latest_stage_code,
           data.end_date,
           sourcePath,
+          bodyText,
         );
 
         const initiativeId =

@@ -19,6 +19,7 @@ SELECT
   li.decision_outcome,
   li.decision_outcome_code,
   li.latest_stage_code,
-  li.end_date
+  li.end_date,
+  li.body_text
 FROM LegislativeInitiative li
 WHERE li.id = $id

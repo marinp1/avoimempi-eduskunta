@@ -885,6 +885,7 @@ export class DocumentRepository {
         decision_outcome_code: string | null;
         latest_stage_code: string | null;
         end_date: string | null;
+        body_text: string | null;
       },
       { $id: number }
     >(oralQuestionById);
@@ -1205,6 +1206,7 @@ export class DocumentRepository {
         decision_outcome_code: string | null;
         latest_stage_code: string | null;
         end_date: string | null;
+        body_text: string | null;
       },
       { $id: number }
     >(legislativeInitiativeById);

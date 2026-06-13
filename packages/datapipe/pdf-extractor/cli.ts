@@ -66,7 +66,14 @@ function parseKind(): ExtractOptions["kind"] {
     if (arg === "--kind" || arg === "-k") {
       const idx = process.argv.indexOf(arg);
       const val = process.argv[idx + 1];
-      if (val === "expert" || val === "vastaus" || val === "all") return val;
+      if (
+        val === "expert" ||
+        val === "vastaus" ||
+        val === "kansalaisaloite" ||
+        val === "suullinen" ||
+        val === "all"
+      )
+        return val;
     }
   }
   return "all";

@@ -58,6 +58,15 @@ export function buildLegislativeInitiative(
   );
   if (law) textSections.push(law);
 
+  if (textSections.length === 0 && detail.body_text) {
+    const body = buildTextSection(
+      i18next.t("documents:detail.text_section_body"),
+      detail.body_text,
+      null,
+    );
+    if (body) textSections.push(body);
+  }
+
   const signatories: Signatory[] = mapMpSignatories(detail.signers ?? []);
 
   const authorParty = detail.first_signer_party ?? "";

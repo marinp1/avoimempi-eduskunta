@@ -30,6 +30,15 @@ export function buildOralQuestion(
   );
   if (qs) textSections.push(qs);
 
+  if (detail.body_text) {
+    const body = buildTextSection(
+      i18next.t("documents:detail.text_section_body"),
+      detail.body_text,
+      null,
+    );
+    if (body) textSections.push(body);
+  }
+
   const author = detail.asker_text ?? "";
 
   return {

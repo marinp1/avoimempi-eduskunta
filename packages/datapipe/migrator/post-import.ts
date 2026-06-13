@@ -73,7 +73,8 @@ export function normalizeImportedTextData(db: Database): void {
          SET
            title = NULLIF(TRIM(title), ''),
            question_text = NULLIF(TRIM(question_text), ''),
-           asker_text = NULLIF(TRIM(asker_text), '')`,
+           asker_text = NULLIF(TRIM(asker_text), ''),
+           body_text = NULLIF(TRIM(body_text), '')`,
       );
     }
 
@@ -84,7 +85,8 @@ export function normalizeImportedTextData(db: Database): void {
            title = NULLIF(TRIM(title), ''),
            justification_text = NULLIF(TRIM(justification_text), ''),
            proposal_text = NULLIF(TRIM(proposal_text), ''),
-           law_text = NULLIF(TRIM(law_text), '')`,
+           law_text = NULLIF(TRIM(law_text), ''),
+           body_text = NULLIF(TRIM(body_text), '')`,
       );
     }
 
@@ -333,7 +335,8 @@ export function rebuildFederatedSearchIndex(
            COALESCE(oq.title, '') || ' ' ||
            COALESCE(oq.parliament_identifier, '') || ' ' ||
            COALESCE(oq.question_text, '') || ' ' ||
-           COALESCE(oq.asker_text, '')
+           COALESCE(oq.asker_text, '') || ' ' ||
+           COALESCE(oq.body_text, '')
          )`,
     searchBodyMaxChars,
   );
@@ -342,7 +345,8 @@ export function rebuildFederatedSearchIndex(
            COALESCE(li.title, '') || ' ' ||
            COALESCE(li.parliament_identifier, '') || ' ' ||
            COALESCE(li.justification_text, '') || ' ' ||
-           COALESCE(li.proposal_text, '')
+           COALESCE(li.proposal_text, '') || ' ' ||
+           COALESCE(li.body_text, '')
          )`,
     searchBodyMaxChars,
   );

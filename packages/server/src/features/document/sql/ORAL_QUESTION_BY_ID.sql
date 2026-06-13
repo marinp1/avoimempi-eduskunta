@@ -10,6 +10,7 @@ SELECT
   oq.decision_outcome,
   oq.decision_outcome_code,
   oq.latest_stage_code,
-  oq.end_date
+  oq.end_date,
+  oq.body_text
 FROM OralQuestion oq
 WHERE oq.id = $id
