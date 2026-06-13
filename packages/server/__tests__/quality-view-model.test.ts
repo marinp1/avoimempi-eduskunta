@@ -104,7 +104,9 @@ describe("buildQualityViewModel", () => {
       durationMs: 1000,
     });
 
-    expect(vm.groups[0]?.checks[0]?.findingNotes).toBe("Tunnettu syy tekstinä.");
+    expect(vm.groups[0]?.checks[0]?.findingNotes).toBe(
+      "Tunnettu syy tekstinä.",
+    );
     expect(vm.groups[0]?.checks[1]?.findingNotes).toBeUndefined();
   });
 

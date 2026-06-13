@@ -45,12 +45,28 @@ if (!traceDb) {
   );
 }
 const traceRepo = traceDb ? new TraceRepository(traceDb) : null;
+const fetchLastMigrationTimestamp = (): string | null => {
+  try {
+    return (
+      db
+        .query<{ value: string }, []>(
+          `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
+        )
+        .get()?.value ?? null
+    );
+  } catch {
+    return null;
+  }
+};
+
 const provenanceService = new ProvenanceService(traceRepo);
 
-const analyticsRepository = new AnalyticsRepository(db);
+const generationKey = fetchLastMigrationTimestamp();
+
+const analyticsRepository = new AnalyticsRepository(db, generationKey);
 const documentRepository = new DocumentRepository(db);
 const metadataRepository = new MetadataRepository(db);
-const personRepository = new PersonRepository(db);
+const personRepository = new PersonRepository(db, generationKey);
 const sessionRepository = new SessionRepository(db);
 const votingRepository = new VotingRepository(db);
 const personService = new PersonService(personRepository, provenanceService);
@@ -74,20 +90,6 @@ const readTimestamp = async (filePath: string): Promise<string | null> => {
   return text || null;
 };
 
-const fetchLastMigrationTimestamp = (): string | null => {
-  try {
-    return (
-      db
-        .query<{ value: string }, []>(
-          `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
-        )
-        .get()?.value ?? null
-    );
-  } catch {
-    return null;
-  }
-};
-
 const homeRepository = new HomeRepository(
   sessionRepository,
   analyticsRepository,
@@ -99,8 +101,6 @@ const homeRepository = new HomeRepository(
 );
 
 const { isDev, port, idleTimeout, reusePort } = loadRuntimeConfig();
-
-const generationKey = fetchLastMigrationTimestamp();
 
 const cache = createResponseCache({
   generationKey: isDev ? "dev" : generationKey,

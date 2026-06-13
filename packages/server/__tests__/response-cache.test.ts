@@ -305,5 +305,178 @@ describe("createResponseCache", () => {
       await Bun.sleep(60); // let TTL expire
       expect(cache.size()).toBe(0);
     });
+
+    test("serves gzip-compressed body when client accepts gzip", async () => {
+      const cache = createResponseCache({
+        generationKey: "2024-01-01T00:00:00.000Z",
+      });
+      const handler = async (_req: Request) =>
+        new Response("hello world", {
+          headers: { "Content-Type": "text/plain" },
+        });
+      const wrapped = cache.wrapRoutes({ "/api/data": { GET: handler } });
+      const routeHandler = (wrapped["/api/data"] as { GET: typeof handler })
+        .GET;
+
+      const gzipReq = new Request("http://localhost/api/data", {
+        headers: { "Accept-Encoding": "gzip" },
+      });
+      const response = await routeHandler(gzipReq);
+
+      expect(response.headers.get("Content-Encoding")).toBe("gzip");
+      expect(response.headers.get("Vary")).toContain("Accept-Encoding");
+      expect(response.status).toBe(200);
+      // The body is gzip-compressed; Bun doesn't transparently decode it in
+      // test, but a real browser would.
+      const buf = await response.arrayBuffer();
+      const decompressed = Bun.gunzipSync(new Uint8Array(buf));
+      expect(new TextDecoder().decode(decompressed)).toBe("hello world");
+    });
+
+    test("serves uncompressed body when client does not accept gzip", async () => {
+      const cache = createResponseCache({
+        generationKey: "2024-01-01T00:00:00.000Z",
+      });
+      const handler = async (_req: Request) =>
+        new Response(JSON.stringify({ ok: true }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      const wrapped = cache.wrapRoutes({ "/api/data": { GET: handler } });
+      const routeHandler = (wrapped["/api/data"] as { GET: typeof handler })
+        .GET;
+
+      const noGzipReq = new Request("http://localhost/api/data");
+      const response = await routeHandler(noGzipReq);
+
+      expect(response.headers.get("Content-Encoding")).toBeNull();
+      expect(response.headers.get("Content-Type")).toBe("application/json");
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ ok: true });
+    });
+
+    test("preserves Content-Type on cache hit", async () => {
+      const cache = createResponseCache({
+        generationKey: "2024-01-01T00:00:00.000Z",
+      });
+      const handler = async (_req: Request) =>
+        new Response("<html>ok</html>", {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      const wrapped = cache.wrapRoutes({ "/page": { GET: handler } });
+      const routeHandler = (wrapped["/page"] as { GET: typeof handler }).GET;
+
+      await routeHandler(makeRequest("/page"));
+      const hit = await routeHandler(makeRequest("/page"));
+
+      expect(hit.headers.get("Content-Type")).toBe("text/html; charset=utf-8");
+    });
+
+    test("in-flight dedup: concurrent requests share one handler execution", async () => {
+      const cache = createResponseCache({
+        generationKey: "2024-01-01T00:00:00.000Z",
+      });
+      let calls = 0;
+      const handler = async (_req: Request) => {
+        calls++;
+        await Bun.sleep(50);
+        return Response.json({ n: calls });
+      };
+      const wrapped = cache.wrapRoutes({ "/api/data": { GET: handler } });
+      const routeHandler = (wrapped["/api/data"] as { GET: typeof handler })
+        .GET;
+
+      const [r1, r2] = await Promise.all([
+        routeHandler(makeRequest("/api/data")),
+        routeHandler(makeRequest("/api/data")),
+      ]);
+
+      expect(calls).toBe(1);
+      expect(await r1.json()).toEqual({ n: 1 });
+      expect(await r2.json()).toEqual({ n: 1 });
+    });
+
+    test("in-flight dedup: failed handler allows retry", async () => {
+      const cache = createResponseCache({
+        generationKey: "2024-01-01T00:00:00.000Z",
+      });
+      let calls = 0;
+      const handler = async (_req: Request) => {
+        calls++;
+        if (calls === 1) throw new Error("boom");
+        return Response.json({ n: calls });
+      };
+      const wrapped = cache.wrapRoutes({ "/api/data": { GET: handler } });
+      const routeHandler = (wrapped["/api/data"] as { GET: typeof handler })
+        .GET;
+
+      try {
+        await routeHandler(makeRequest("/api/data"));
+      } catch {
+        // expected
+      }
+
+      const response = await routeHandler(makeRequest("/api/data"));
+      expect(calls).toBe(2);
+      expect(await response.json()).toEqual({ n: 2 });
+    });
+
+    test("byte-size cap evicts oldest entries when exceeded", async () => {
+      const cache = createResponseCache({
+        generationKey: "2024-01-01T00:00:00.000Z",
+        maxBytes: 50, // very tight — gzip overhead alone is ~20 bytes per entry
+        maxEntries: 100,
+      });
+      let calls = 0;
+      const handler = async (req: Request) => {
+        calls++;
+        return new Response(new URL(req.url).pathname);
+      };
+      const wrapped = cache.wrapRoutes({
+        "/api/a": { GET: handler },
+        "/api/b": { GET: handler },
+        "/api/c": { GET: handler },
+      });
+
+      await (wrapped["/api/a"] as { GET: typeof handler }).GET(
+        makeRequest("/api/a"),
+      );
+      await (wrapped["/api/b"] as { GET: typeof handler }).GET(
+        makeRequest("/api/b"),
+      );
+      await (wrapped["/api/c"] as { GET: typeof handler }).GET(
+        makeRequest("/api/c"),
+      );
+
+      expect(calls).toBe(3);
+      // With maxBytes=50, at most 2 entries can coexist (gzip ~20-25 bytes ea)
+      expect(cache.size()).toBeLessThanOrEqual(2);
+    });
+
+    test("custom cacheKey does not collide on HX-Request variants", async () => {
+      const cache = createResponseCache({
+        generationKey: "2024-01-01T00:00:00.000Z",
+      });
+      let calls = 0;
+      const handler = async (req: Request) => {
+        calls++;
+        return new Response(req.headers.get("HX-Request") ?? "none");
+      };
+      const keyFn = (req: Request, url: URL) =>
+        `${url.pathname}|hx=${req.headers.get("HX-Request") ?? "0"}`;
+      const wrapped = cache.wrapRoutes(
+        { "/page": { GET: handler } },
+        { cacheKey: keyFn },
+      );
+      const routeHandler = (wrapped["/page"] as { GET: typeof handler }).GET;
+
+      await routeHandler(
+        new Request("http://localhost/page", {
+          headers: { "HX-Request": "true" },
+        }),
+      );
+      await routeHandler(makeRequest("/page"));
+
+      expect(calls).toBe(2); // different keys
+    });
   });
 });

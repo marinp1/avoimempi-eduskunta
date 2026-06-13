@@ -21,7 +21,7 @@ export function createVotingsListRoute(deps: WebappDeps) {
     path: "/aanestykset",
     GET: withWebappPage(deps, async (ctx) => {
       const url = new URL(ctx.req.url);
-      const searchQuery = url.searchParams.get("q")?.trim().toLowerCase();
+      const searchQuery = url.searchParams.get("q")?.trim();
       const cursor = url.searchParams.get("cursor") ?? undefined;
       const typeParam = url.searchParams.get("type") ?? undefined;
       const activeFilter =
@@ -31,15 +31,24 @@ export function createVotingsListRoute(deps: WebappDeps) {
       const endDate = cursor ? dayBefore(cursor) : ctx.bounds.endDate;
 
       const browseResult = ctx.deps.votingRepository.browseVotings({
+        q: searchQuery,
+        type: activeFilter ?? undefined,
         startDate: ctx.bounds.startDate,
         endDate,
         sort: "newest",
         limit: 500,
       });
 
+      const totalCount = ctx.deps.votingRepository.countVotings({
+        q: searchQuery,
+        type: activeFilter ?? undefined,
+        startDate: ctx.bounds.startDate,
+        endDate,
+      });
+
       const data = buildAanestyksetData({
         votings: browseResult,
-        searchQuery,
+        totalCount,
         activeFilter,
         fetchedAt: deps.provenanceService.tableFetchedAt("SaliDBAanestys"),
       });

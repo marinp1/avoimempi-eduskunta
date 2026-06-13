@@ -95,47 +95,16 @@ function parseDocTunnuses(raw: string | null): VoteRow["documents"] {
   return docs;
 }
 
-function matchesType(v: VotingBrowseRow, type: string): boolean {
-  const title = (v.title ?? "").toLowerCase();
-  switch (type) {
-    case "lait":
-      return (
-        title.includes("laki") &&
-        !title.includes("luottamus") &&
-        !title.includes("selonteko")
-      );
-    case "selonteot":
-      return title.includes("selonteko");
-    case "luottamus":
-      return title.includes("luottamus") || title.includes("välikysymys");
-    case "tiukat":
-      return v.n_total > 0 && Math.abs(v.n_yes - v.n_no) < 10;
-    default:
-      return true;
-  }
-}
-
 export function buildAanestyksetData(input: {
   votings: VotingBrowseRow[];
-  searchQuery: string | undefined;
+  totalCount: number;
   activeFilter: string | null;
   fetchedAt: string;
 }): AanestyksetData {
-  const { votings, searchQuery, activeFilter, fetchedAt } = input;
-
-  const filtered = votings.filter((v) => {
-    if (searchQuery) {
-      const matchesSearch =
-        (v.title ?? "").toLowerCase().includes(searchQuery) ||
-        (v.session_key ?? "").toLowerCase().includes(searchQuery);
-      if (!matchesSearch) return false;
-    }
-    if (activeFilter) return matchesType(v, activeFilter);
-    return true;
-  });
+  const { votings, totalCount, activeFilter, fetchedAt } = input;
 
   const groupMap = new Map<string, VoteRow[]>();
-  for (const v of filtered) {
+  for (const v of votings) {
     const t = buildVoteTally({
       nYes: v.n_yes,
       nNo: v.n_no,
@@ -195,7 +164,7 @@ export function buildAanestyksetData(input: {
 
   return {
     groups,
-    totalCount: filtered.length,
+    totalCount,
     nextCursor,
     activeFilter,
     fetchedAt,

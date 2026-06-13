@@ -8,8 +8,18 @@ import recentActivity from "./sql/analytics-recent-activity.sql";
 import speechActivity from "./sql/analytics-speech-activity.sql";
 import { endDateExclusive } from "../../database/query-helpers";
 
+const MAX_MEMO_ENTRIES = 200;
+
 export class AnalyticsRepository {
-  constructor(private readonly db: Database) {}
+  private readonly partySummaryMemo = new Map<
+    string,
+    ReturnType<typeof this.queryPartySummary>
+  >();
+
+  constructor(
+    private readonly db: Database,
+    private readonly generationKey: string | null = null,
+  ) {}
 
   public fetchPartyDiscipline(params?: {
     startDate?: string;
@@ -184,6 +194,42 @@ export class AnalyticsRepository {
     const endDateExclusiveValue = endDateExclusive(params?.endDate);
     const governmentName = params?.governmentName ?? null;
     const governmentStartDate = params?.governmentStartDate ?? null;
+
+    if (this.generationKey) {
+      const memoKey = `${this.generationKey}|${asOfDate}|${startDate}|${endDateExclusiveValue}|${governmentName}|${governmentStartDate}`;
+      const cached = this.partySummaryMemo.get(memoKey);
+      if (cached) return cached;
+      const data = this.queryPartySummary({
+        asOfDate,
+        startDate,
+        endDateExclusiveValue,
+        governmentName,
+        governmentStartDate,
+      });
+      if (this.partySummaryMemo.size >= MAX_MEMO_ENTRIES) {
+        const firstKey = this.partySummaryMemo.keys().next().value;
+        if (firstKey !== undefined) this.partySummaryMemo.delete(firstKey);
+      }
+      this.partySummaryMemo.set(memoKey, data);
+      return data;
+    }
+
+    return this.queryPartySummary({
+      asOfDate,
+      startDate,
+      endDateExclusiveValue,
+      governmentName,
+      governmentStartDate,
+    });
+  }
+
+  private queryPartySummary(params: {
+    asOfDate: string;
+    startDate: string | null;
+    endDateExclusiveValue: string | null;
+    governmentName: string | null;
+    governmentStartDate: string | null;
+  }) {
     const stmt = this.db.query<
       {
         party_code: string;
@@ -206,14 +252,13 @@ export class AnalyticsRepository {
         $governmentStartDate: string | null;
       }
     >(partySummary);
-    const data = stmt.all({
-      $asOfDate: asOfDate,
-      $startDate: startDate,
-      $endDateExclusive: endDateExclusiveValue,
-      $governmentName: governmentName,
-      $governmentStartDate: governmentStartDate,
+    return stmt.all({
+      $asOfDate: params.asOfDate,
+      $startDate: params.startDate,
+      $endDateExclusive: params.endDateExclusiveValue,
+      $governmentName: params.governmentName,
+      $governmentStartDate: params.governmentStartDate,
     });
-    return data;
   }
 
   public fetchPartyMembers(params: {

@@ -29,6 +29,8 @@ import { RECORD_LABEL } from "./record-label";
 const MAX_PKS_PER_SOURCE = 200;
 /** Cap on rows scanned per statement execution (bounds per-request overhead). */
 const MAX_ROWS_SCANNED = 400;
+/** Cap on entries in the page trace memos (prevents unbounded growth from crawlers). */
+const MAX_TRACE_MEMO_ENTRIES = 500;
 
 /** Collects the SQL files, source-record PKs (with optional labels) and bound
  *  params touched during one page render. PK *values* are keyed by source table
@@ -283,10 +285,23 @@ export interface RecordedTrace {
   queryParams: Record<string, Record<string, unknown>>;
 }
 
-/** Exact memo, keyed by `pathname + search`. */
+/** Exact memo, keyed by `pathname + search`, capped at {@link MAX_TRACE_MEMO_ENTRIES}. */
 const pageTraceMemo = new Map<string, RecordedTrace>();
-/** Fallback memo, keyed by `pathname` only (last render of that path wins). */
+/** Fallback memo, keyed by `pathname` only (last render of that path wins), capped at {@link MAX_TRACE_MEMO_ENTRIES}. */
 const pageTracePathMemo = new Map<string, RecordedTrace>();
+
+function setMemoCapped(
+  map: Map<string, RecordedTrace>,
+  key: string,
+  value: RecordedTrace,
+): void {
+  while (map.size >= MAX_TRACE_MEMO_ENTRIES) {
+    const oldestKey = map.keys().next().value;
+    if (oldestKey === undefined) break;
+    map.delete(oldestKey);
+  }
+  map.set(key, value);
+}
 
 function asUrl(target: string | URL): URL {
   return typeof target === "string" ? new URL(target, "http://x") : target;
@@ -316,8 +331,8 @@ export function recordPageTrace(
     queryParams,
   };
   const url = asUrl(target);
-  pageTraceMemo.set(`${url.pathname}${url.search}`, recorded);
-  pageTracePathMemo.set(url.pathname, recorded);
+  setMemoCapped(pageTraceMemo, `${url.pathname}${url.search}`, recorded);
+  setMemoCapped(pageTracePathMemo, url.pathname, recorded);
 }
 
 /**

@@ -97,7 +97,10 @@ describe("executeCheck", () => {
   test("carries findingNotes into the outcome regardless of status", () => {
     const notes = "Tunnettu syy: lähdedatan kattavuus.";
 
-    const passing = executeCheck(db, makeCheck("ok", [], { findingNotes: notes }));
+    const passing = executeCheck(
+      db,
+      makeCheck("ok", [], { findingNotes: notes }),
+    );
     const failing = executeCheck(
       db,
       makeCheck("bad", [{ id: 1 }], { findingNotes: notes }),

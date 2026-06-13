@@ -105,6 +105,7 @@ const QUERY_BINDING_OVERRIDES: Record<
     $query: null,
     $session: null,
     $phase: null,
+    $type: null,
     $sort: "newest",
   },
   // Only person 1002 has a government membership in the seed.

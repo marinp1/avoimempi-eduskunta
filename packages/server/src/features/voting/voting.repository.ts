@@ -5,6 +5,7 @@ import votingMemberVotesById from "./sql/voting-member-votes.sql";
 import votingPartyBreakdownById from "./sql/voting-party-breakdown.sql";
 import votingRelatedById from "./sql/voting-related.sql";
 import votingsBrowse from "./sql/voting-list.sql";
+import votingsCount from "./sql/voting-count.sql";
 import {
   buildSearchQuery,
   endDateExclusive,
@@ -16,6 +17,7 @@ export class VotingRepository {
   public browseVotings(params: {
     q?: string;
     phase?: string;
+    type?: string;
     session?: string;
     sort?: "newest" | "oldest" | "closest" | "largest";
     startDate?: string;
@@ -24,11 +26,12 @@ export class VotingRepository {
   }) {
     const searchQuery = buildSearchQuery(params.q);
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       DatabaseQueries.VotingSearchResult,
       {
         $query: string | null;
         $phase: string | null;
+        $type: string | null;
         $session: string | null;
         $sort: string;
         $startDate: string | null;
@@ -36,17 +39,49 @@ export class VotingRepository {
         $limit: number;
       }
     >(votingsBrowse);
-    const data = stmt.all({
+    return stmt.all({
       $query: searchQuery,
       $phase: params.phase ?? null,
+      $type: params.type ?? null,
       $session: params.session ?? null,
       $sort: params.sort ?? "newest",
       $startDate: params.startDate ?? null,
       $endDateExclusive: endDateExclusiveValue,
       $limit: params.limit ?? 200,
     });
-    stmt.finalize();
-    return data;
+  }
+
+  public countVotings(params: {
+    q?: string;
+    phase?: string;
+    type?: string;
+    session?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const searchQuery = buildSearchQuery(params.q);
+    const endDateExclusiveValue = endDateExclusive(params.endDate);
+    const stmt = this.db.query<
+      { total: number },
+      {
+        $query: string | null;
+        $phase: string | null;
+        $type: string | null;
+        $session: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
+    >(votingsCount);
+    return (
+      stmt.get({
+        $query: searchQuery,
+        $phase: params.phase ?? null,
+        $type: params.type ?? null,
+        $session: params.session ?? null,
+        $startDate: params.startDate ?? null,
+        $endDateExclusive: endDateExclusiveValue,
+      })?.total ?? 0
+    );
   }
 
   public fetchVotingById(params: { votingId: string }) {

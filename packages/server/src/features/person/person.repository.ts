@@ -17,8 +17,52 @@ import type { RosterRow } from "#server/types/webapp";
 
 export type { RosterRow };
 
+type PersonMetricAggregatesResult = {
+  rows: Array<{
+    person_id: number;
+    party: string | null;
+    speech_count: number;
+    initiative_count: number;
+    interpellation_count: number;
+    written_question_count: number;
+    vote_total: number;
+    vote_cast: number;
+  }>;
+  baselines: {
+    parliament: {
+      label: string | null;
+      n: number;
+      avgSpeechCount: number;
+      avgInitiativeCount: number;
+      avgInterpellationCount: number;
+      avgWrittenQuestionCount: number;
+      avgVoteParticipationRate: number;
+    };
+    parties: Record<
+      string,
+      {
+        label: string | null;
+        n: number;
+        avgSpeechCount: number;
+        avgInitiativeCount: number;
+        avgInterpellationCount: number;
+        avgWrittenQuestionCount: number;
+        avgVoteParticipationRate: number;
+      }
+    >;
+  };
+};
+
 export class PersonRepository {
-  constructor(private readonly db: Database) {}
+  private metricsMemo: {
+    key: string;
+    data: PersonMetricAggregatesResult;
+  } | null = null;
+
+  constructor(
+    private readonly db: Database,
+    private readonly generationKey: string | null = null,
+  ) {}
 
   public fetchRoster(): RosterRow[] {
     const stmt = this.db.prepare<RosterRow, []>(roster);
@@ -259,6 +303,17 @@ export class PersonRepository {
   }
 
   public fetchPersonMetricAggregates() {
+    if (this.generationKey) {
+      const key = this.generationKey;
+      if (this.metricsMemo?.key === key) return this.metricsMemo.data;
+      const data = this.queryPersonMetricAggregates();
+      this.metricsMemo = { key, data };
+      return data;
+    }
+    return this.queryPersonMetricAggregates();
+  }
+
+  private queryPersonMetricAggregates() {
     const stmt = this.db.prepare<
       {
         person_id: number;

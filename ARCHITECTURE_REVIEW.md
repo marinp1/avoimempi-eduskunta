@@ -87,7 +87,7 @@ Material risks cluster in three places:
 ### Weaknesses
 
 - **W8 (integrity, verified)**: `migrate.ts` clears ALL tables (lines
-  406-418) *outside* any transaction, sets `synchronous = OFF` (line 392),
+  406-418) _outside_ any transaction, sets `synchronous = OFF` (line 392),
   and uses per-table transactions only (lines 451, 600). A failure mid-run
   leaves a partially populated DB with no rollback of completed tables.
   Production is shielded by the symlink-flip deploy (pipeline builds a fresh

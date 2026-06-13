@@ -35,9 +35,13 @@ export class VotingService {
       sort: "newest",
       limit: 500,
     });
+    const totalCount = this.votingRepo.countVotings({
+      startDate: params.startDate,
+      endDate: params.endDate,
+    });
     return buildAanestyksetData({
       votings: browseResult,
-      searchQuery: params.searchQuery,
+      totalCount,
       activeFilter: null,
       fetchedAt: this.provenanceService.tableFetchedAt("SaliDBAanestys"),
     });
