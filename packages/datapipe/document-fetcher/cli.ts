@@ -2,7 +2,23 @@ import { Database } from "bun:sqlite";
 import { getDatabasePath, getDocumentsDatabasePath } from "#database";
 import { getDocumentHandler } from "#storage";
 import { openDocumentsDb } from "./db.ts";
-import { fetchAndStoreDocument, sleep, RATE_LIMIT_MS } from "./fetcher.ts";
+import {
+  fetchAndStoreDocument,
+  sleep,
+  RATE_LIMIT_MS,
+  DEFAULT_RETRY_AFTER_SECONDS,
+} from "./fetcher.ts";
+
+const AK_COUNTERPART_FILTER = `AND NOT (
+    v.edk_identifier NOT LIKE '%-AK-%'
+    AND v.title IS NOT NULL
+    AND EXISTS (
+      SELECT 1 FROM VaskiDocument v2
+      WHERE v2.document_type = v.document_type
+        AND v2.title = v.title
+        AND v2.edk_identifier LIKE '%-AK-%'
+    )
+  )`;
 
 function printHelp() {
   console.log(`
@@ -21,6 +37,7 @@ Options:
   --concurrency N  Number of parallel fetches (all mode only, default: 10)
   --document-type  Only fetch documents of this type (all mode only)
   --dry-run        Print what would be fetched without downloading
+  --poll           On 429 rate-limit, wait for Retry-After header (default 2 min) and continue instead of aborting
 
 Examples:
   bun run fetch-docs status
@@ -31,6 +48,7 @@ Examples:
   bun run fetch-docs all --concurrency 5
   bun run fetch-docs all --document-type vastaus_kirjalliseen_kysymykseen
   bun run fetch-docs all --retry-errors
+  bun run fetch-docs all --poll
 `);
 }
 
@@ -42,6 +60,8 @@ function parseArgs(args: string[]) {
   let limit: number | null = 1000;
   let concurrency = 5;
   let documentType: string | null = null;
+
+  let poll = false;
 
   const readFlagValue = (
     rawArg: string,
@@ -73,6 +93,10 @@ function parseArgs(args: string[]) {
     }
     if (rawArg === "--dry-run") {
       dryRun = true;
+      continue;
+    }
+    if (rawArg === "--poll") {
+      poll = true;
       continue;
     }
     if (rawArg === "--no-limit") {
@@ -126,7 +150,16 @@ function parseArgs(args: string[]) {
     }
   }
 
-  return { mode, force, retryErrors, dryRun, limit, concurrency, documentType };
+  return {
+    mode,
+    force,
+    retryErrors,
+    dryRun,
+    limit,
+    concurrency,
+    documentType,
+    poll,
+  };
 }
 
 async function showStatus() {
@@ -148,8 +181,8 @@ async function showStatus() {
          COUNT(CASE WHEN d.error IS NOT NULL AND d.edk_identifier IS NOT NULL THEN 1 END) AS errors
        FROM VaskiDocument v
        LEFT JOIN docsdb.DocumentFile d ON d.edk_identifier = v.edk_identifier
-       WHERE v.edk_identifier IS NOT NULL
-       GROUP BY v.document_type
+        WHERE v.edk_identifier IS NOT NULL ${AK_COUNTERPART_FILTER}
+        GROUP BY v.document_type
        ORDER BY total DESC`,
     )
     .all();
@@ -188,7 +221,7 @@ async function showStatus() {
 
 async function fetchSingle(
   edkIdentifier: string,
-  options: { force: boolean; dryRun: boolean },
+  options: { force: boolean; dryRun: boolean; poll: boolean },
 ) {
   await getDocumentHandler().healthCheck();
   const docsDb = openDocumentsDb();
@@ -211,6 +244,17 @@ async function fetchSingle(
     force: options.force,
     dryRun: options.dryRun,
   });
+
+  if (result.rateLimited && options.poll) {
+    const waitSeconds = result.retryAfterSeconds ?? DEFAULT_RETRY_AFTER_SECONDS;
+    console.log(
+      `⏸  Rate limited — waiting ${waitSeconds}s then retrying (Retry-After: ${result.retryAfterSeconds ? `${result.retryAfterSeconds}s (header)` : "none — defaulting"})`,
+    );
+    await sleep(waitSeconds * 1000);
+    docsDb.close();
+    await fetchSingle(edkIdentifier, options);
+    return;
+  }
 
   docsDb.close();
 
@@ -238,6 +282,7 @@ async function fetchAll(options: {
   limit: number | null;
   concurrency: number;
   documentType: string | null;
+  poll: boolean;
 }) {
   await getDocumentHandler().healthCheck();
   const docsDb = openDocumentsDb();
@@ -250,18 +295,7 @@ async function fetchAll(options: {
     ? `AND v.document_type = '${options.documentType.replace(/'/g, "''")}'`
     : "";
 
-  const akCounterpartFilter = `AND NOT (
-    v.edk_identifier NOT LIKE '%-AK-%'
-    AND v.title IS NOT NULL
-    AND EXISTS (
-      SELECT 1 FROM VaskiDocument v2
-      WHERE v2.document_type = v.document_type
-        AND v2.title = v.title
-        AND v2.edk_identifier LIKE '%-AK-%'
-    )
-  )`;
-
-  let whereClause = `v.edk_identifier IS NOT NULL ${akCounterpartFilter}`;
+  let whereClause = `v.edk_identifier IS NOT NULL ${AK_COUNTERPART_FILTER}`;
   if (!options.force) {
     if (options.retryErrors) {
       whereClause += ` AND (d.edk_identifier IS NULL OR d.error IS NOT NULL)`;
@@ -281,7 +315,7 @@ async function fetchAll(options: {
          COUNT(CASE WHEN d.error IS NOT NULL AND d.edk_identifier IS NOT NULL THEN 1 END) AS errors
        FROM VaskiDocument v
        LEFT JOIN docsdb.DocumentFile d ON d.edk_identifier = v.edk_identifier
-       WHERE v.edk_identifier IS NOT NULL ${akCounterpartFilter} ${typeFilter}`,
+        WHERE v.edk_identifier IS NOT NULL ${AK_COUNTERPART_FILTER} ${typeFilter}`,
     )
     .get()!;
 
@@ -358,6 +392,17 @@ async function fetchAll(options: {
       completed++;
 
       if (result.rateLimited) {
+        if (options.poll) {
+          const waitSeconds =
+            result.retryAfterSeconds ?? DEFAULT_RETRY_AFTER_SECONDS;
+          console.log(
+            `⏸  [${completed + 1}/${rows.length}] Rate limited — waiting ${waitSeconds}s (Retry-After: ${result.retryAfterSeconds ? `${result.retryAfterSeconds}s (header)` : "none — defaulting"})`,
+          );
+          await sleep(waitSeconds * 1000 + RATE_LIMIT_MS);
+          nextIndex--;
+          completed--;
+          continue;
+        }
         aborted = true;
         const remaining = rows.length - completed;
         console.log(
@@ -405,8 +450,16 @@ async function main() {
     process.exit(0);
   }
 
-  const { mode, force, retryErrors, dryRun, limit, concurrency, documentType } =
-    parseArgs(args);
+  const {
+    mode,
+    force,
+    retryErrors,
+    dryRun,
+    limit,
+    concurrency,
+    documentType,
+    poll,
+  } = parseArgs(args);
 
   if (mode === "status") {
     await showStatus();
@@ -421,12 +474,13 @@ async function main() {
       limit,
       concurrency,
       documentType,
+      poll,
     });
     return;
   }
 
   if (mode) {
-    await fetchSingle(mode, { force, dryRun });
+    await fetchSingle(mode, { force, dryRun, poll });
     return;
   }
 

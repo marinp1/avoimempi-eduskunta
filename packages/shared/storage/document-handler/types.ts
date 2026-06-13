@@ -1,6 +1,6 @@
 export interface IDocumentHandler {
-  put(filename: string, data: Buffer): Promise<void>;
-  exists(filename: string): Promise<boolean>;
-  metadata(filename: string): Promise<{ sizeBytes: number } | null>;
+  put(storageKey: string, data: Buffer): Promise<void>;
+  exists(storageKey: string): Promise<boolean>;
+  metadata(storageKey: string): Promise<{ sizeBytes: number } | null>;
   healthCheck(): Promise<void>;
 }

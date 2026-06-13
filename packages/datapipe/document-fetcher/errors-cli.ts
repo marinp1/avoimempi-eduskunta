@@ -136,6 +136,9 @@ async function main() {
   // --- Detail rows ---
 
   const conditions: string[] = ["d.error IS NOT NULL"];
+  conditions.push(
+    `(v.edk_identifier IS NULL OR NOT (v.edk_identifier NOT LIKE '%-AK-%' AND v.title IS NOT NULL AND EXISTS (SELECT 1 FROM maindb.VaskiDocument v2 WHERE v2.document_type = v.document_type AND v2.title = v.title AND v2.edk_identifier LIKE '%-AK-%')))`,
+  );
   if (documentType) {
     conditions.push(`v.document_type = '${documentType.replace(/'/g, "''")}'`);
   }
