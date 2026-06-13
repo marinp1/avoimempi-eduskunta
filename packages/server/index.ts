@@ -15,7 +15,6 @@ import { MetadataRepository } from "./src/features/metadata/metadata.repository"
 import { PersonRepository } from "./src/features/person/person.repository";
 import { SessionRepository } from "./src/features/session/session.repository";
 import { VotingRepository } from "./src/features/voting/voting.repository";
-import { AnalyticsService } from "./src/features/analytics/analytics.service";
 import { DocumentService } from "./src/features/document/document.service";
 import { HomeService } from "./src/features/home/home.service";
 import { MetadataService } from "./src/features/metadata/metadata.service";
@@ -42,7 +41,6 @@ const personRepository = new PersonRepository(db);
 const sessionRepository = new SessionRepository(db);
 const votingRepository = new VotingRepository(db);
 const personService = new PersonService(personRepository);
-const analyticsService = new AnalyticsService(analyticsRepository);
 const documentService = new DocumentService(
   documentRepository,
   personRepository,
@@ -141,7 +139,6 @@ const allRoutes = withSecurityHeaders({
   ...cache.wrapRoutes(
     createWebappPageRoutes({
       analyticsRepository,
-      analyticsService,
       documentRepository,
       documentService,
       homeRepository,

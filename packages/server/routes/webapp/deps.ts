@@ -1,4 +1,3 @@
-import type { AnalyticsService } from "../../src/features/analytics/analytics.service";
 import type { DocumentService } from "../../src/features/document/document.service";
 import type { HomeService } from "../../src/features/home/home.service";
 import type { MetadataService } from "../../src/features/metadata/metadata.service";
@@ -15,7 +14,6 @@ import type { VotingRepository } from "../../src/features/voting/voting.reposito
 
 export interface WebappDeps {
   analyticsRepository: AnalyticsRepository;
-  analyticsService: AnalyticsService;
   documentRepository: DocumentRepository;
   documentService: DocumentService;
   homeRepository: HomeRepository;

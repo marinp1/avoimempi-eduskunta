@@ -1,17 +1,5 @@
 {
   "not_found_title": "Sivua ei löydy",
   "not_found_desc": "Polkua {{path}} ei löydy.",
-  "back_to_home": "Palaa etusivulle",
-  "analytiikka": {
-    "title": "Analytiikka",
-    "body": "Tilastot ja analyysit parlamentin toiminnasta. Tulossa pian."
-  },
-  "hallitukset": {
-    "title": "Hallitukset",
-    "body": "Suomen hallitusten kokoonpanot ja kaudet. Tulossa pian."
-  },
-  "muutokset": {
-    "title": "Muutokset",
-    "body": "Palvelun ja datan päivityshistoria. Tulossa pian."
-  }
+  "back_to_home": "Palaa etusivulle"
 }
