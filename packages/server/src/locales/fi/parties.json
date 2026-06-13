@@ -22,7 +22,7 @@
     "stat_attendance": "Läsnäolo keskimäärin",
     "stat_avg_age": "Edustajien ikä ka.",
     "ai_summary_label": "Tekoälykooste · millainen ryhmä",
-    "ai_not_available": "Tekoälykoostetta ei ole vielä saatavilla tälle ryhmälle.",
+    "ai_question": "Millainen eduskuntaryhmä?",
     "ai_disclaimer": "Koneellisesti tuotettu kooste ryhmän profiilista.",
     "cohesion_kicker": "Ryhmäkuri · äänestysyhtenäisyys",
     "cohesion_title": "Kuinka yhtenäisesti ryhmä äänestää",

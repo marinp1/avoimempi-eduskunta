@@ -220,7 +220,12 @@ export default function Asiakirja({ data }: Props) {
         {d.textSections.length > 0 &&
           (d.textSections[0]!.paragraphs.length > 0 ||
             d.textSections[0]!.html) && (
-            <div class="summary">
+            <div
+              class="summary js-ai-summary"
+              data-ai-kind="document"
+              data-ai-subkind={d.kind}
+              data-ai-context={d.title}
+            >
               <div class="summary__bar">
                 <span class="l">
                   <span class="spark">✦</span>
@@ -237,16 +242,11 @@ export default function Asiakirja({ data }: Props) {
                 <div class="summary__q">
                   {i18next.t("documents:detail.content_question")}
                 </div>
-                <p class="summary__lead">
-                  {d.textSections[0]!.paragraphs[0]
-                    ? esc(d.textSections[0]!.paragraphs[0]!.slice(0, 280)) + "…"
-                    : d.textSections[0]!.html
-                      ? d.textSections[0]!.html.replace(/<[^>]+>/g, "").slice(
-                          0,
-                          280,
-                        ) + "…"
-                      : ""}
-                </p>
+                <div class="summary__skeleton">
+                  <span class="summary__skel-line" style="width:78%"></span>
+                  <span class="summary__skel-line" style="width:58%"></span>
+                  <span class="summary__skel-line" style="width:68%"></span>
+                </div>
               </div>
             </div>
           )}
@@ -256,7 +256,20 @@ export default function Asiakirja({ data }: Props) {
         <article class="article" id="kysymys">
           {d.textSections.map((section, si) => (
             <>
-              <div class="article__phase">{section.heading}</div>
+              <div class="article__phase">
+                {section.heading}
+                <button
+                  class="section__ai-btn js-ai-block"
+                  data-ai-kind="doc-section"
+                  data-ai-context={section.heading}
+                  aria-label="Tiivistä osio"
+                >
+                  ✦
+                </button>
+              </div>
+              <div class="section__ai-result js-ai-block-result" hidden>
+                <p class="js-ai-block-text"></p>
+              </div>
               {section.html
                 ? section.html
                 : section.paragraphs.map((para, pi) =>
@@ -361,43 +374,19 @@ export default function Asiakirja({ data }: Props) {
                   date: d.answerDate ? formatFi(d.answerDate) : "",
                 })}
               </div>
-              <h3>{i18next.t("documents:detail.answer_heading")}</h3>
-
-              <div class="summary" style="margin:14px 0 22px">
-                <div class="summary__bar">
-                  <span class="l">
-                    <span class="spark">✦</span>
-                    <span class="lbl">
-                      {i18next.t("documents:detail.answer_info_label")}
-                    </span>
-                  </span>
-                </div>
-                <div class="summary__in">
-                  <div class="summary__q">
-                    {i18next.t("documents:detail.answer_question")}
-                  </div>
-                  <p class="summary__lead">
-                    {i18next.t("documents:detail.answer_minister_gave", {
-                      name: d.answerMinisterName ?? "",
-                      date: d.answerDate ? formatFi(d.answerDate) : "",
-                    })}
-                  </p>
-                  <ul class="summary__points">
-                    <li>
-                      {i18next.t("documents:detail.answer_id_label")}{" "}
-                      <b>{esc(d.answerIdentifier ?? "")}</b>
-                    </li>
-                    <li>
-                      {i18next.t("documents:detail.answer_respondent_label")}{" "}
-                      <b>{esc(d.answerMinisterName ?? "")}</b> ·{" "}
-                      {esc(d.answerMinisterTitle ?? "")}
-                    </li>
-                    <li>
-                      {i18next.t("documents:detail.answer_given_label")}{" "}
-                      <b>{d.answerDate ? formatFi(d.answerDate) : ""}</b>
-                    </li>
-                  </ul>
-                </div>
+              <h3>
+                {i18next.t("documents:detail.answer_heading")}
+                <button
+                  class="section__ai-btn js-ai-block"
+                  data-ai-kind="doc-section"
+                  data-ai-context={i18next.t("documents:detail.answer_heading")}
+                  aria-label="Tiivistä vastaus"
+                >
+                  ✦
+                </button>
+              </h3>
+              <div class="section__ai-result js-ai-block-result" hidden>
+                <p class="js-ai-block-text"></p>
               </div>
 
               {d.answerTextSections.length > 0 &&

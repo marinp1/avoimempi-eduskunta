@@ -28,7 +28,7 @@ try {
   docDb.close();
   console.log(`Loaded ${docTextMap.size} PDF texts from DocumentText`);
 } catch (e) {
-  console.warn(`Could not load DocumentText: ${e}`);
+  console.warn(`Could not load DocumentText:`, e);
 }
 
 // --- Iterate parsed rows ---
@@ -44,7 +44,12 @@ const counts: Record<
   { total: number; titleMatch: number; bodyMatch: number; orgMatch: number }
 > = {};
 
-const matchSamples: { title: string; author: string; org: string | null; source: string }[] = [];
+const matchSamples: {
+  title: string;
+  author: string;
+  org: string | null;
+  source: string;
+}[] = [];
 const failedRows: FailedRow[] = [];
 const orgCounts: Record<string, number> = {};
 
@@ -52,7 +57,9 @@ const rowStore = getParsedRowStore();
 
 for await (const storedRow of rowStore.list("VaskiData")) {
   const entry = JSON.parse(storedRow.data) as Record<string, any>;
-  const docType = entry["#avoimempieduskunta"]?.documentType as string | undefined;
+  const docType = entry["#avoimempieduskunta"]?.documentType as
+    | string
+    | undefined;
   if (!docType || !EXPERT_DOC_TYPES.has(docType)) continue;
 
   const edkId = (entry.eduskuntaTunnus as string | null) ?? null;
@@ -71,7 +78,8 @@ for await (const storedRow of rowStore.list("VaskiData")) {
   const author = titleAuthor ?? bodyAuthor;
   const org = extractOrgFromAuthorText(author);
 
-  if (!counts[docType]) counts[docType] = { total: 0, titleMatch: 0, bodyMatch: 0, orgMatch: 0 };
+  if (!counts[docType])
+    counts[docType] = { total: 0, titleMatch: 0, bodyMatch: 0, orgMatch: 0 };
   counts[docType].total++;
   if (titleAuthor) counts[docType].titleMatch++;
   else if (bodyAuthor) counts[docType].bodyMatch++;
@@ -90,7 +98,9 @@ for await (const storedRow of rowStore.list("VaskiData")) {
     failedRows.push({
       edkId: edkId ?? "",
       title,
-      bodyExcerpt: bodyText ? bodyText.slice(0, 300).replace(/\s+/g, " ") : null,
+      bodyExcerpt: bodyText
+        ? bodyText.slice(0, 300).replace(/\s+/g, " ")
+        : null,
       bodyAuthor: null,
     });
   }
@@ -116,7 +126,9 @@ console.log(`Total rows       : ${totalRows}`);
 console.log(`Title matched    : ${totalTitle} (${pct(totalTitle, totalRows)})`);
 console.log(`Body matched     : ${totalBody} (${pct(totalBody, totalRows)})`);
 console.log(`Org extracted    : ${totalOrg} (${pct(totalOrg, totalRows)})`);
-console.log(`Both failed      : ${totalFailed} (${pct(totalFailed, totalRows)})`);
+console.log(
+  `Both failed      : ${totalFailed} (${pct(totalFailed, totalRows)})`,
+);
 
 console.log("\n--- By document type ---");
 for (const [type, c] of Object.entries(counts)) {
@@ -148,7 +160,9 @@ mkdirSync(reportDir, { recursive: true });
 
 // Titles file (for quick text search)
 const titlesPath = join(reportDir, "expert-statement-nomatch-titles.txt");
-const sortedTitles = [...new Set(failedRows.map((r) => r.title ?? "").filter(Boolean))].sort();
+const sortedTitles = [
+  ...new Set(failedRows.map((r) => r.title ?? "").filter(Boolean)),
+].sort();
 await Bun.write(titlesPath, sortedTitles.join("\n") + "\n");
 
 // Detailed report with PDF excerpts for rows that had body text available
@@ -168,4 +182,6 @@ await Bun.write(detailedPath, lines.join("\n"));
 
 console.log(`\nReports written:`);
 console.log(`  titles  → ${titlesPath}`);
-console.log(`  details → ${detailedPath}  (${withPdf.length} rows with PDF excerpt)`);
+console.log(
+  `  details → ${detailedPath}  (${withPdf.length} rows with PDF excerpt)`,
+);

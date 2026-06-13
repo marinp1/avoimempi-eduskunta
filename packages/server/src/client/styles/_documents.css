@@ -138,24 +138,59 @@
 .summary__lead {
   font-family: var(--head);
   font-weight: 700;
-  font-size: 21px;
-  line-height: 1.35;
+  font-size: 17px;
+  line-height: 1.45;
   color: var(--ink);
   letter-spacing: -0.015em;
 }
+.summary__lead--streaming {
+  opacity: 0.85;
+}
+.summary__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 0 4px;
+}
+.summary__skel-line {
+  display: block;
+  height: 14px;
+  background: var(--paper-3);
+  animation: skel-pulse 1.6s ease-in-out infinite;
+}
+@keyframes skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
 .summary__points {
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 11px;
+  animation: fade-up 0.3s ease both;
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .summary__points li {
   position: relative;
   padding-left: 22px;
   font-size: 15.5px;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--body);
 }
 .summary__points li::before {
@@ -222,6 +257,71 @@
   color: var(--muted);
   max-width: 46ch;
   line-height: 1.4;
+}
+
+/* AI summary island states */
+.summary__lead--muted {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.summary__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 4px 0 6px;
+  padding: 9px 18px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.summary__btn:hover {
+  opacity: 0.88;
+}
+.summary__btn .spark {
+  font-size: 12px;
+}
+
+/* Per-section AI summary */
+.section__ai-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--blue);
+  font-size: 12px;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+.section__ai-btn:hover {
+  background: var(--paper-2);
+}
+.section__ai-result {
+  margin: 10px 0 20px;
+  padding: 10px 14px;
+  background: var(--paper-2);
+  border-left: 3px solid var(--blue);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--blue-ink);
+  max-width: 66ch;
+  animation: fade-up 0.3s ease both;
+}
+.section__ai-result[hidden] {
+  display: none;
+}
+.ai-block--streaming {
+  opacity: 0.7;
 }
 
 /* the long-form body */

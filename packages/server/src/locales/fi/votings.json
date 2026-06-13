@@ -39,7 +39,6 @@
     "result_bar_absent": "Poissa {{count}}",
     "ai_summary": "Tekoälykooste · mitä tulos tarkoittaa",
     "ai_question": "Mitä tulos tarkoittaa?",
-    "ai_not_available": "Tekoälykoostetta ei ole vielä saatavilla tälle äänestykselle.",
     "ai_disclaimer": "Koneellisesti tuotettu tulkinta äänestystuloksesta.",
     "gov_label": "Hallitus",
     "opp_label": "Oppositio"

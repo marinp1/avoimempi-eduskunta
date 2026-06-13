@@ -52,6 +52,7 @@ export default function Keskustelu({ data }: Props) {
         <AiSummaryBlock
           groupSpeechCount={sec.groupSpeechCount}
           totalSpeeches={sec.totalSpeeches}
+          context={sec.title}
         />
         <ContextSection data={data} />
         <FilterToolbar
@@ -178,12 +179,18 @@ function DocToolbar({
 function AiSummaryBlock({
   groupSpeechCount,
   totalSpeeches,
+  context,
 }: {
   groupSpeechCount: number;
   totalSpeeches: number;
+  context: string;
 }) {
   return (
-    <div class="summary">
+    <div
+      class="summary js-ai-summary"
+      data-ai-kind="debate"
+      data-ai-context={context}
+    >
       <div class="summary__bar">
         <span class="l">
           <span class="spark">✦</span>
@@ -202,9 +209,11 @@ function AiSummaryBlock({
         <div class="summary__q">
           {i18next.t("components:keskustelu.ai_question")}
         </div>
-        <p class="summary__lead">
-          {i18next.t("components:keskustelu.ai_not_available")}
-        </p>
+        <div class="summary__skeleton">
+          <span class="summary__skel-line" style="width:78%"></span>
+          <span class="summary__skel-line" style="width:58%"></span>
+          <span class="summary__skel-line" style="width:68%"></span>
+        </div>
         <div class="summary__foot">
           <span class="summary__disc">
             {i18next.t("components:keskustelu.ai_disclaimer")}
@@ -396,6 +405,15 @@ function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
             <p>{sp.summary}</p>
           </div>
         )}
+        {!sp.summary && (
+          <div class="speech__sum js-ai-block-result" hidden>
+            <span class="speech__sum-tag">
+              <span class="sp">✦</span>
+              {i18next.t("components:keskustelu.speech_ai_tag")}
+            </span>
+            <p class="js-ai-block-text"></p>
+          </div>
+        )}
         <div class="speech__body">{sp.content && <p>{sp.content}</p>}</div>
         <div class="speech__foot">
           <span class="meta">
@@ -405,6 +423,13 @@ function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
             {" · "}
             {i18next.t("common:language_fi")}
           </span>
+          <button
+            class="speech__ai-btn js-ai-block"
+            data-ai-kind="speech"
+            aria-label={i18next.t("components:keskustelu.speech_ai_btn_label")}
+          >
+            ✦
+          </button>
           <button type="button" class="link-arrow">
             {i18next.t("common:open_in_minutes")}
           </button>

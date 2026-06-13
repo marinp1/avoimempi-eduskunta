@@ -15,3 +15,4 @@ import "./nav-morph";
 import "./about-island";
 import "./nav-island";
 import "./trace-overlay-island";
+import "./ai-summary-island";

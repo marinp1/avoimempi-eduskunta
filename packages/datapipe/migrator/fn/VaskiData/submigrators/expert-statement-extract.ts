@@ -21,7 +21,9 @@ const BODY_AFTER_LABEL =
 const BODY_BEFORE_LABEL =
   /^([\s\S]{4,150}?)\s*(?:Asiantuntijalausunto|Asiantuntijalausunnon\s+liite)\b/i;
 
-export function extractAuthorFromBodyText(bodyText: string | null): string | null {
+export function extractAuthorFromBodyText(
+  bodyText: string | null,
+): string | null {
   if (!bodyText) return null;
   const head = bodyText.slice(0, 400).replace(/\r\n/g, "\n");
 
@@ -33,7 +35,10 @@ export function extractAuthorFromBodyText(bodyText: string | null): string | nul
 
   const beforeMatch = BODY_BEFORE_LABEL.exec(head);
   if (beforeMatch) {
-    const lines = beforeMatch[1].split("\n").map((l) => l.trim()).filter(Boolean);
+    const lines = beforeMatch[1]
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
     const last = lines[lines.length - 1] ?? "";
     if (last.length >= 4 && last.length <= 150) return last;
   }
@@ -44,7 +49,9 @@ export function extractAuthorFromBodyText(bodyText: string | null): string | nul
 export const ORG_INDICATORS =
   /\b(?:ry|rf|oyj|oy|ab|virasto|ministeriö|liitto|neuvosto|yhdistys|seura|säätiö|keskus|laitos|toimisto|komitea|toimikunta|järjestö|instituutti|institutti|yliopisto|ammattikorkeakoulu|korkeakoulu)\b/i;
 
-export function extractOrgFromAuthorText(authorText: string | null): string | null {
+export function extractOrgFromAuthorText(
+  authorText: string | null,
+): string | null {
   if (!authorText) return null;
   const lastCommaIdx = authorText.lastIndexOf(", ");
   if (lastCommaIdx === -1) {

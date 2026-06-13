@@ -10,7 +10,7 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "types": ["bun-types"],
+    "types": ["bun-types", "dom-chromium-ai"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,

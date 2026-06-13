@@ -11,6 +11,7 @@ export default function Footer() {
         <span class="pbadge" data-period-badge-foot></span>
         <span class="pdetail" data-period-detail></span>
       </div>
+      <div id="js-ai-status" class="foot__ai" hidden></div>
       <div class="foot__legal">
         <span>
           {i18next.t("components:footer.brand_tag")} ·{" "}

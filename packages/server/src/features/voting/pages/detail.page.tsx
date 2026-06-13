@@ -231,7 +231,11 @@ export default function Aanestys({ title, data }: Props) {
           </div>
         </section>
 
-        <div class="summary mt-24">
+        <div
+          class="summary mt-24 js-ai-summary"
+          data-ai-kind="voting"
+          data-ai-context={v.title ?? ""}
+        >
           <div class="summary__bar">
             <span class="l">
               <span class="spark">✦</span>
@@ -242,9 +246,11 @@ export default function Aanestys({ title, data }: Props) {
             <div class="summary__q">
               {i18next.t("votings:detail.ai_question")}
             </div>
-            <p class="summary__lead">
-              {i18next.t("votings:detail.ai_not_available")}
-            </p>
+            <div class="summary__skeleton">
+              <span class="summary__skel-line" style="width:78%"></span>
+              <span class="summary__skel-line" style="width:58%"></span>
+              <span class="summary__skel-line" style="width:68%"></span>
+            </div>
             <div class="summary__foot">
               <span class="summary__disc">
                 {i18next.t("votings:detail.ai_disclaimer")}

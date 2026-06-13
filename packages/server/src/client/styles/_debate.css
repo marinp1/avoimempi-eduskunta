@@ -181,6 +181,30 @@
   margin-right: auto;
 }
 
+.speech__ai-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--blue);
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.speech__ai-btn:hover {
+  background: var(--paper-2);
+}
+.speech__ai-btn.is-generating {
+  opacity: 0.5;
+  cursor: wait;
+}
+.speech__sum[hidden] {
+  display: none;
+}
+
 /* "show more replies" block */
 .more-speeches {
   margin-top: 26px;

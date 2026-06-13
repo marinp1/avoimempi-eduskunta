@@ -126,18 +126,33 @@ export default function Puolue({ title, data }: Props) {
 
         <div class="bio-grid">
           <div>
-            <div class="ai">
-              <div class="ai__head">
-                <span class="ai__spark">✦</span>
-                <span class="ai__label">
-                  {i18next.t("parties:detail.ai_summary_label")}
+            <div
+              class="summary js-ai-summary"
+              data-ai-kind="party"
+              data-ai-context={p.name}
+            >
+              <div class="summary__bar">
+                <span class="l">
+                  <span class="spark">✦</span>
+                  <span class="lbl">
+                    {i18next.t("parties:detail.ai_summary_label")}
+                  </span>
                 </span>
               </div>
-              <p class="ai__body">
-                {i18next.t("parties:detail.ai_not_available")}
-              </p>
-              <div class="ai__foot">
-                <span>{i18next.t("parties:detail.ai_disclaimer")}</span>
+              <div class="summary__in">
+                <div class="summary__q">
+                  {i18next.t("parties:detail.ai_question")}
+                </div>
+                <div class="summary__skeleton">
+                  <span class="summary__skel-line" style="width:78%"></span>
+                  <span class="summary__skel-line" style="width:58%"></span>
+                  <span class="summary__skel-line" style="width:68%"></span>
+                </div>
+                <div class="summary__foot">
+                  <span class="summary__disc">
+                    {i18next.t("parties:detail.ai_disclaimer")}
+                  </span>
+                </div>
               </div>
             </div>
 

@@ -67,7 +67,6 @@
     "ai_summary_label": "Tekoälykooste · koko istunto",
     "ai_summary_meta": "{{items}} asiakohtaa · {{votes}} äänestystä · {{speeches}} puheenvuoroa",
     "ai_summary_question": "Mitä istunnossa tapahtui?",
-    "ai_summary_not_available": "Tekoälykoostetta ei ole vielä saatavilla tälle istunnolle.",
     "not_found_title": "Sivua ei löytynyt",
     "not_found_body": "Asiakohtaa ei löytynyt tietokannasta.",
     "asiakohta_not_found": "Asiakohtaa ei löytynyt",

@@ -71,9 +71,7 @@ export function cleanResponseBody(
   return body || null;
 }
 
-export function cleanBodyText(
-  text: string | null | undefined,
-): string | null {
+export function cleanBodyText(text: string | null | undefined): string | null {
   if (!text) return null;
   if (text.length < 80 && !/[A-ZÄÖÅa-zäöå]/.test(text)) return null;
   const body = stripSignatureAndFixHyphens(text);

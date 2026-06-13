@@ -161,7 +161,11 @@ function HomeLead({ data }: { data?: HomeData }) {
  */
 function HomeDaySummary({ date }: { date: string | null }) {
   return (
-    <div class="summary">
+    <div
+      class="summary js-ai-summary"
+      data-ai-kind="home"
+      data-ai-context={date ?? ""}
+    >
       <div class="summary__bar">
         <span class="l">
           <span class="spark">✦</span>
@@ -173,11 +177,11 @@ function HomeDaySummary({ date }: { date: string | null }) {
       </div>
       <div class="summary__in">
         <div class="summary__q">{i18next.t("home:summary_q")}</div>
-        <p class="summary__lead">
-          {date
-            ? i18next.t("home:summary_day", { date: formatDate(date) })
-            : i18next.t("home:summary_overview")}
-        </p>
+        <div class="summary__skeleton">
+          <span class="summary__skel-line" style="width:78%"></span>
+          <span class="summary__skel-line" style="width:58%"></span>
+          <span class="summary__skel-line" style="width:68%"></span>
+        </div>
         <div class="summary__foot">
           <span class="summary__disc">
             {i18next.t("home:summary_disclaimer")}
