@@ -37,60 +37,42 @@ export class HomeRepository {
       latestCompletedSessionDate ||
       new Date().toISOString().slice(0, 10);
 
-    const [
-      parties,
-      vaskiLatestSpeechDate,
-      recentActivity,
-      closeVotes,
-      speechActivity,
-      coalitionOpposition,
-      lastMigrationTimestamp,
-      lastScraperRunAt,
-      lastMigratorRunAt,
-    ] = await Promise.all([
-      Promise.resolve(
-        this.analytics.fetchPartySummary({
-          asOfDate,
-          startDate: params.startDate,
-          endDate: params.endDate,
-          governmentName: params.governmentName,
-          governmentStartDate: params.governmentStartDate,
-        }),
-      ),
-      Promise.resolve(this.sessions.fetchLatestSpeechDate()),
-      Promise.resolve(
-        this.analytics.fetchRecentActivity({
-          limit: 6,
-          startDate: params.startDate,
-          endDate: params.endDate,
-        }),
-      ),
-      Promise.resolve(
-        this.analytics.fetchCloseVotes({
-          threshold: 10,
-          limit: 5,
-          startDate: params.startDate,
-          endDate: params.endDate,
-        }),
-      ),
-      Promise.resolve(
-        this.analytics.fetchSpeechActivity({
-          limit: 5,
-          startDate: params.startDate,
-          endDate: params.endDate,
-        }),
-      ),
-      Promise.resolve(
-        this.analytics.fetchCoalitionVsOpposition({
-          limit: 5,
-          startDate: params.startDate,
-          endDate: params.endDate,
-        }),
-      ),
-      Promise.resolve(this.freshness.fetchLastMigrationTimestamp()),
-      Promise.resolve(this.freshness.fetchLastScraperRunAt()),
-      Promise.resolve(this.freshness.fetchLastMigratorRunAt()),
-    ]);
+    const parties = this.analytics.fetchPartySummary({
+      asOfDate,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      governmentName: params.governmentName,
+      governmentStartDate: params.governmentStartDate,
+    });
+    const vaskiLatestSpeechDate = this.sessions.fetchLatestSpeechDate();
+    const recentActivity = this.analytics.fetchRecentActivity({
+      limit: 6,
+      startDate: params.startDate,
+      endDate: params.endDate,
+    });
+    const closeVotes = this.analytics.fetchCloseVotes({
+      threshold: 10,
+      limit: 5,
+      startDate: params.startDate,
+      endDate: params.endDate,
+    });
+    const speechActivity = this.analytics.fetchSpeechActivity({
+      limit: 5,
+      startDate: params.startDate,
+      endDate: params.endDate,
+    });
+    const coalitionOpposition = this.analytics.fetchCoalitionVsOpposition({
+      limit: 5,
+      startDate: params.startDate,
+      endDate: params.endDate,
+    });
+
+    const [lastMigrationTimestamp, lastScraperRunAt, lastMigratorRunAt] =
+      await Promise.all([
+        this.freshness.fetchLastMigrationTimestamp(),
+        this.freshness.fetchLastScraperRunAt(),
+        this.freshness.fetchLastMigratorRunAt(),
+      ]);
 
     const latestDaySessions = latestCompletedSessionDate
       ? this.sessions.fetchSessionWithSectionsByDate({
@@ -166,12 +148,15 @@ export class HomeRepository {
     sessions: SessionWithSections[],
     vaskiLatestSpeechDate: string | null,
   ) {
+    const sessionKeys = sessions.map((s) => s.key);
+    const noticesByKey =
+      this.sessions.fetchSessionNoticesBySessionKeys(sessionKeys);
     return {
       date: latestCompletedSessionDate,
       vaskiLatestSpeechDate,
       sessions: sessions.map((session) => ({
         ...session,
-        notices: this.sessions.fetchSessionNotices({ sessionKey: session.key }),
+        notices: noticesByKey.get(session.key) ?? [],
       })),
     };
   }

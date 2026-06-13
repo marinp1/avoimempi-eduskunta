@@ -59,7 +59,9 @@ export const PrimaryKeys: Record<TableName, string | null> = {
 function assertPrimaryKeysValid(): void {
   for (const tableName of TableNames) {
     if (!Object.prototype.hasOwnProperty.call(PrimaryKeys, tableName)) {
-      throw new Error(`PrimaryKeys is missing an entry for table '${tableName}'.`);
+      throw new Error(
+        `PrimaryKeys is missing an entry for table '${tableName}'.`,
+      );
     }
     const pk = PrimaryKeys[tableName];
     if (pk !== null && (typeof pk !== "string" || pk.length === 0)) {
