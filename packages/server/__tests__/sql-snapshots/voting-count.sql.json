@@ -1,0 +1,9 @@
+{
+  "columns": {
+    "total": "number"
+  },
+  "hasNulls": {
+    "total": false
+  },
+  "rowCount": 1
+}

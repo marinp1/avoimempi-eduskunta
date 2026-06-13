@@ -19,6 +19,7 @@ interface Props {
 
 export default function Aanestys({ title, data }: Props) {
   const v = data.vote;
+  const sp = data.statementProposal;
 
   return (
     <>
@@ -229,6 +230,66 @@ export default function Aanestys({ title, data }: Props) {
             </div>
           </div>
         </section>
+
+        {sp && (
+          <section class="ph mt-28">
+            <Kicker
+              text={i18next.t("votings:detail.statement_proposal_kicker")}
+              modifier="blue"
+              dot
+            />
+            <div class="ph__head">
+              <h2>
+                {sp.kind === "vastalause"
+                  ? sp.statementNumber !== null
+                    ? i18next.t("votings:detail.statement_proposal_label", {
+                        number: sp.statementNumber,
+                      })
+                    : i18next.t(
+                        "votings:detail.statement_proposal_label_unnumbered",
+                      )
+                  : sp.title ||
+                    i18next.t(
+                      "votings:detail.statement_proposal_label_unnumbered",
+                    )}
+              </h2>
+            </div>
+            {sp.kind === "vastalause" ? (
+              <>
+                <p class="ph__intro">{sp.statementText}</p>
+                <div class="sess-meta">
+                  <a
+                    href={sp.reportUrl}
+                    class="link-clr"
+                    hx-get={sp.reportUrl}
+                    {...NAV}
+                  >
+                    {i18next.t("votings:detail.statement_source_report", {
+                      dissentLabel: sp.dissentLabel,
+                      identifier: sp.reportIdentifier,
+                    })}
+                  </a>
+                </div>
+              </>
+            ) : (
+              <>
+                <p class="ph__intro">
+                  {i18next.t("votings:detail.statement_annex_intro")}
+                </p>
+                <div class="sess-meta">
+                  <a
+                    href={sp.pdfUrl}
+                    class="link-clr"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    {i18next.t("votings:detail.statement_annex_link")}
+                  </a>
+                </div>
+              </>
+            )}
+          </section>
+        )}
 
         <div
           class="summary mt-24 js-ai-summary"

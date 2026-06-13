@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
 import { convertVaskiNodeToRichText } from "../rich-text";
+import { extractSourceReference } from "./helpers/source-reference";
 
 function normalizeText(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -230,9 +231,7 @@ function parseLausunto(
 
   const asiaKuvaus = lausunto.AsiaKuvaus;
   const vireilletulo = asiaKuvaus?.VireilletuloAsia || asiaKuvaus?.Vireilletulo;
-  const source_reference =
-    normalizeText(vireilletulo?.EduskuntaTunnus) ||
-    normalizeText(vireilletulo?.EduskuntaTunnusTeksti);
+  const source_reference = extractSourceReference(vireilletulo);
 
   const osallistujaOsa = lausunto.OsallistujaOsa;
   const signature_date = normalizeText(

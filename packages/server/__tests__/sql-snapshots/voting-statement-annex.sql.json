@@ -1,0 +1,13 @@
+{
+  "columns": {
+    "edk_identifier": "string",
+    "id": "number",
+    "title": "string"
+  },
+  "hasNulls": {
+    "edk_identifier": false,
+    "id": false,
+    "title": false
+  },
+  "rowCount": 1
+}

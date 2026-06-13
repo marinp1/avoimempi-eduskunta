@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
 import { convertVaskiNodeToRichText } from "../rich-text";
+import { extractSourceReference } from "./helpers/source-reference";
 
 function normalizeText(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -181,6 +182,158 @@ type CommitteeReportExpert = {
   organization: string | null;
 };
 
+type CommitteeReportDissentStatement = {
+  statement_order: number;
+  statement_number: number | null;
+  statement_text: string;
+};
+
+type CommitteeReportDissentSigner = {
+  signer_order: number;
+  person_id: number | null;
+  first_name: string | null;
+  last_name: string | null;
+  party: string | null;
+};
+
+type CommitteeReportDissent = {
+  dissent_order: number;
+  dissent_number: number | null;
+  heading: string | null;
+  signature_date: string | null;
+  statements: CommitteeReportDissentStatement[];
+  signers: CommitteeReportDissentSigner[];
+};
+
+/**
+ * Some vastalauseet carry their lausumaehdotukset inside PonsiOsa instead of
+ * SuppeaLausumaKannanottoOsa, mixed with procedural ponsi clauses ("että
+ * lakiehdotus hylätään"). Only used when the ponsi explicitly mentions a
+ * lausuma; procedural clauses (lowercase "että ...") and "(Vastalauseen
+ * lausumaehdotukset)" headings are filtered out by requiring an
+ * uppercase-initial sentence.
+ */
+function parsePonsiFallbackStatements(
+  ponsiOsa: Record<string, any> | undefined,
+): CommitteeReportDissentStatement[] {
+  const texts = [
+    ...normalizeArray<unknown>(ponsiOsa?.SisennettyKappaleKooste),
+    ...normalizeArray<unknown>(ponsiOsa?.KappaleKooste),
+  ]
+    .map((item) => (convertVaskiNodeToRichText(item).plainText ?? "").trim())
+    .filter((text) => text !== "");
+
+  if (!texts.some((text) => /lausuma/iu.test(text))) return [];
+
+  const statements: CommitteeReportDissentStatement[] = [];
+  for (const text of texts) {
+    if (!/^(?:\d+\s*[.)]\s*)?[A-ZÄÖÅ]/u.test(text)) continue;
+    if (/^\(?vastalauseen\b/iu.test(text)) continue;
+    const numberMatch = text.match(/^\s*(\d+)\s*[.)]/);
+    statements.push({
+      statement_order: statements.length + 1,
+      statement_number: numberMatch
+        ? Number.parseInt(numberMatch[1], 10)
+        : null,
+      statement_text: text,
+    });
+  }
+  return statements;
+}
+
+function parseDissents(
+  jasenMielipideOsa: unknown,
+  context: string,
+): CommitteeReportDissent[] {
+  const dissents: CommitteeReportDissent[] = [];
+
+  for (const [index, osa] of normalizeArray<Record<string, any>>(
+    jasenMielipideOsa as Record<string, any> | Record<string, any>[],
+  ).entries()) {
+    if (!osa || typeof osa !== "object") continue;
+
+    const heading = normalizeText(osa.OtsikkoTeksti);
+    const headingNumberMatch = heading?.match(/\d+/);
+    const dissent_number = headingNumberMatch
+      ? Number.parseInt(headingNumberMatch[0], 10)
+      : null;
+
+    let statements: CommitteeReportDissentStatement[] = [];
+    for (const lausumaOsa of normalizeArray<Record<string, any>>(
+      osa.SuppeaLausumaKannanottoOsa,
+    )) {
+      for (const item of normalizeArray<unknown>(
+        lausumaOsa?.SisennettyKappaleKooste,
+      )) {
+        const statement_text = convertVaskiNodeToRichText(item).plainText;
+        if (!statement_text) continue;
+        const numberMatch = statement_text.match(/^\s*(\d+)\s*[.)]/);
+        statements.push({
+          statement_order: statements.length + 1,
+          statement_number: numberMatch
+            ? Number.parseInt(numberMatch[1], 10)
+            : null,
+          statement_text,
+        });
+      }
+    }
+    if (statements.length === 0) {
+      statements = parsePonsiFallbackStatements(osa.PonsiOsa);
+    }
+
+    const signers: CommitteeReportDissentSigner[] = [];
+    let signature_date: string | null = null;
+    for (const allekirjoitusOsa of normalizeArray<Record<string, any>>(
+      osa.SuppeaAllekirjoitusOsa,
+    )) {
+      signature_date =
+        signature_date ||
+        normalizeText(allekirjoitusOsa?.SuppeaPaivays?.["@_allekirjoitusPvm"]);
+      for (const allekirjoittaja of normalizeArray<Record<string, any>>(
+        allekirjoitusOsa?.Allekirjoittaja,
+      )) {
+        for (const henkilo of normalizeArray<Record<string, any>>(
+          allekirjoittaja?.Henkilo,
+        )) {
+          const first_name = normalizeText(henkilo?.EtuNimi);
+          const last_name = normalizeText(henkilo?.SukuNimi);
+          if (!first_name && !last_name) continue;
+
+          let person_id: number | null = null;
+          try {
+            person_id = parseOptionalInteger(
+              henkilo["@_muuTunnus"],
+              "dissent_signer_person_id",
+              context,
+            );
+          } catch {
+            person_id = null;
+          }
+
+          signers.push({
+            signer_order: signers.length + 1,
+            person_id,
+            first_name,
+            last_name,
+            party: normalizeText(henkilo?.LisatietoTeksti),
+          });
+        }
+      }
+    }
+
+    dissents.push({
+      dissent_order: index + 1,
+      dissent_number,
+      heading,
+      signature_date,
+      statements,
+      signers,
+    });
+  }
+
+  return dissents;
+}
+
 function parseMietinto(
   row: VaskiEntry,
   body: Record<string, any>,
@@ -209,6 +362,7 @@ function parseMietinto(
   resolution_rich_text: string | null;
   members: CommitteeReportMember[];
   experts: CommitteeReportExpert[];
+  dissents: CommitteeReportDissent[];
 } {
   const mietinto = body.Mietinto;
   if (!mietinto || typeof mietinto !== "object") {
@@ -228,9 +382,7 @@ function parseMietinto(
 
   const asiaKuvaus = mietinto.AsiaKuvaus;
   const vireilletulo = asiaKuvaus?.VireilletuloAsia || asiaKuvaus?.Vireilletulo;
-  const source_reference =
-    normalizeText(vireilletulo?.EduskuntaTunnus) ||
-    normalizeText(vireilletulo?.EduskuntaTunnusTeksti);
+  const source_reference = extractSourceReference(vireilletulo);
 
   const osallistujaOsa = mietinto.OsallistujaOsa;
   const signature_date = normalizeText(
@@ -367,6 +519,7 @@ function parseMietinto(
     resolution_rich_text,
     members,
     experts,
+    dissents: parseDissents(mietinto.JasenMielipideOsa, context),
   };
 }
 
@@ -422,6 +575,25 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
   );
   const insertExpert = db.prepare(
     "INSERT INTO CommitteeReportExpert (report_id, expert_order, person_id, first_name, last_name, title, organization) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  );
+
+  const deleteDissents = db.prepare(
+    "DELETE FROM CommitteeReportDissent WHERE report_id = ?",
+  );
+  const deleteDissentStatements = db.prepare(
+    "DELETE FROM CommitteeReportDissentStatement WHERE report_id = ?",
+  );
+  const deleteDissentSigners = db.prepare(
+    "DELETE FROM CommitteeReportDissentSigner WHERE report_id = ?",
+  );
+  const insertDissent = db.prepare(
+    "INSERT INTO CommitteeReportDissent (report_id, dissent_order, dissent_number, heading, signature_date) VALUES (?, ?, ?, ?, ?)",
+  );
+  const insertDissentStatement = db.prepare(
+    "INSERT INTO CommitteeReportDissentStatement (report_id, dissent_order, statement_order, statement_number, statement_text) VALUES (?, ?, ?, ?, ?)",
+  );
+  const insertDissentSigner = db.prepare(
+    "INSERT INTO CommitteeReportDissentSigner (report_id, dissent_order, signer_order, person_id, first_name, last_name, party) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
 
   const linkVaskiDocument = db.prepare(
@@ -545,6 +717,41 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
             );
           }
         }
+
+        if (data.dissents.length > 0) {
+          deleteDissentStatements.run(reportId);
+          deleteDissentSigners.run(reportId);
+          deleteDissents.run(reportId);
+          for (const dissent of data.dissents) {
+            insertDissent.run(
+              reportId,
+              dissent.dissent_order,
+              dissent.dissent_number,
+              dissent.heading,
+              dissent.signature_date,
+            );
+            for (const statement of dissent.statements) {
+              insertDissentStatement.run(
+                reportId,
+                dissent.dissent_order,
+                statement.statement_order,
+                statement.statement_number,
+                statement.statement_text,
+              );
+            }
+            for (const signer of dissent.signers) {
+              insertDissentSigner.run(
+                reportId,
+                dissent.dissent_order,
+                signer.signer_order,
+                signer.person_id,
+                signer.first_name,
+                signer.last_name,
+                signer.party,
+              );
+            }
+          }
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         writeMigrationReport(row, "parse_error_row_skipped", message);
@@ -557,6 +764,12 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
       insertMember.finalize();
       deleteExperts.finalize();
       insertExpert.finalize();
+      deleteDissents.finalize();
+      deleteDissentStatements.finalize();
+      deleteDissentSigners.finalize();
+      insertDissent.finalize();
+      insertDissentStatement.finalize();
+      insertDissentSigner.finalize();
       linkVaskiDocument.finalize();
       updateVaskiTitle.finalize();
       committeeNameByCode.finalize();

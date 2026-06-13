@@ -324,6 +324,45 @@ export function seedFullDataset(db: Database) {
     ],
   );
 
+  // Committee report with a dissenting opinion (statement proposal source);
+  // source_reference matches the $sourceReference contract binding.
+  db.run(
+    `INSERT INTO CommitteeReport (id, parliament_identifier, report_type_code, document_number, parliamentary_year, source_reference, source_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [700, "StVM 5/2024 vp", "StVM", 5, "2024", "KK 100/2024", "test"],
+  );
+  db.run(
+    `INSERT INTO CommitteeReportDissent (report_id, dissent_order, dissent_number, heading, signature_date)
+     VALUES (?, ?, ?, ?, ?)`,
+    [700, 1, 1, "Vastalause 1", "2024-01-10"],
+  );
+  db.run(
+    `INSERT INTO CommitteeReportDissentStatement (report_id, dissent_order, statement_order, statement_number, statement_text)
+     VALUES (?, ?, ?, ?, ?)`,
+    [700, 1, 1, 1, "1. Eduskunta edellyttää, että asia hoidetaan."],
+  );
+  db.run(
+    `INSERT INTO CommitteeReportDissentSigner (report_id, dissent_order, signer_order, person_id, first_name, last_name, party)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [700, 1, 1, 1000, "Matti", "Meikäläinen", "kesk"],
+  );
+
+  // Plenary annex (moniste statement proposal PDF metadata)
+  db.run(
+    `INSERT INTO PlenaryAnnex (id, edk_identifier, title, source_reference, session_key, meeting_date, draft_date, source_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      750,
+      "EDK-2024-AK-1",
+      "Lausumaehdotukset 15.1.2024",
+      "KK 100/2024",
+      "2024/1",
+      "2024-01-15",
+      "2024-01-15",
+      "test",
+    ],
+  );
+
   // Sub-sections (agenda items within a section)
   db.run(
     `INSERT INTO SubSection (session_key, section_key, entry_order, entry_kind, item_identifier,

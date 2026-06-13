@@ -12,6 +12,7 @@ import createLakialoite from "./submigrators/lakialoite.ts";
 import createLisatalousarvioaloite from "./submigrators/lisätalousarvioaloite.ts";
 import createNimenhuutoraportti from "./submigrators/nimenhuutoraportti.ts";
 import createPoytakirja from "./submigrators/pöytäkirja.ts";
+import createPoytakirjanLiite from "./submigrators/pöytäkirjan_liite.ts";
 import createSuullinenKysymys from "./submigrators/suullinen_kysymys.ts";
 import createTalousarvioaloite from "./submigrators/talousarvioaloite.ts";
 import createToimenpidealoite from "./submigrators/toimenpidealoite.ts";
@@ -33,6 +34,7 @@ const SUBMIGRATOR_FACTORIES: Record<string, VaskiSubMigratorFactory> = {
   lisätalousarvioaloite: createLisatalousarvioaloite,
   nimenhuutoraportti: createNimenhuutoraportti,
   pöytäkirja: createPoytakirja,
+  pöytäkirjan_liite: createPoytakirjanLiite,
   suullinen_kysymys: createSuullinenKysymys,
   talousarvioaloite: createTalousarvioaloite,
   toimenpidealoite: createToimenpidealoite,

@@ -55,4 +55,6 @@ ${entries.join("\n")}
 `;
 
 fs.writeFileSync(OUT_FILE, content);
-console.log(`Generated ${path.relative(process.cwd(), OUT_FILE)} (${sqlFiles.length} SQL files)`);
+console.log(
+  `Generated ${path.relative(process.cwd(), OUT_FILE)} (${sqlFiles.length} SQL files)`,
+);

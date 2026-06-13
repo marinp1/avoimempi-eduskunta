@@ -4,12 +4,19 @@ import votingGovernmentOppositionById from "./sql/voting-government-opposition.s
 import votingMemberVotesById from "./sql/voting-member-votes.sql";
 import votingPartyBreakdownById from "./sql/voting-party-breakdown.sql";
 import votingRelatedById from "./sql/voting-related.sql";
+import votingStatementAnnex from "./sql/voting-statement-annex.sql";
+import votingStatementProposals from "./sql/voting-statement-proposals.sql";
+import votingStatementSigners from "./sql/voting-statement-signers.sql";
 import votingsBrowse from "./sql/voting-list.sql";
 import votingsCount from "./sql/voting-count.sql";
 import {
   buildSearchQuery,
   endDateExclusive,
 } from "../../database/query-helpers";
+import type {
+  StatementProposalRow,
+  StatementSignerRow,
+} from "./voting-title";
 
 export class VotingRepository {
   constructor(private readonly db: Database) {}
@@ -110,6 +117,39 @@ export class VotingRepository {
         { $id: number }
       >(votingMemberVotesById)
       .all({ $id: votingId });
+  }
+
+  public fetchStatementProposalRows(params: { sourceReference: string }) {
+    return this.db
+      .query<StatementProposalRow, { $sourceReference: string }>(
+        votingStatementProposals,
+      )
+      .all({ $sourceReference: params.sourceReference });
+  }
+
+  public fetchStatementSignerRows(params: { sourceReference: string }) {
+    return this.db
+      .query<StatementSignerRow, { $sourceReference: string }>(
+        votingStatementSigners,
+      )
+      .all({ $sourceReference: params.sourceReference });
+  }
+
+  public fetchStatementAnnex(params: {
+    sourceReference: string;
+    sessionKey: string;
+  }) {
+    return (
+      this.db
+        .query<
+          { id: number; edk_identifier: string | null; title: string | null },
+          { $sourceReference: string; $sessionKey: string }
+        >(votingStatementAnnex)
+        .get({
+          $sourceReference: params.sourceReference,
+          $sessionKey: params.sessionKey,
+        }) ?? null
+    );
   }
 
   public fetchVotingInlineDetails(params: { votingId: string }) {

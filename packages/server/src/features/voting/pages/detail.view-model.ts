@@ -12,6 +12,18 @@ import type {
 } from "#server/domain/provenance.service";
 import type { SourceNoteOptions } from "#server/components/provenance";
 import i18next from "i18next";
+import { parseVotePropositions } from "../voting-title";
+import type { ResolvedStatement } from "../voting-title";
+
+/** Resolved statement proposal data as produced by VotingService. */
+export type StatementProposalInput =
+  | {
+      kind: "vastalause";
+      resolved: ResolvedStatement;
+      reportId: number;
+      reportIdentifier: string;
+    }
+  | { kind: "moniste"; title: string; edkIdentifier: string };
 
 interface VotingRow {
   id: number;
@@ -108,6 +120,22 @@ export interface SingleVoteData {
     yesProposition: string | null;
     noProposition: string | null;
   };
+  /**
+   * The lausumaehdotus (statement proposal) the voting decided on, resolved
+   * from the voting title. Null when the title has no proposal reference or
+   * the reference could not be resolved unambiguously.
+   */
+  statementProposal:
+    | {
+        kind: "vastalause";
+        statementText: string;
+        statementNumber: number | null;
+        dissentLabel: string;
+        reportIdentifier: string;
+        reportUrl: string;
+      }
+    | { kind: "moniste"; title: string; pdfUrl: string }
+    | null;
   /** Row-level trace for this voting record (deep-links to the source row). */
   provenance: CitePropData;
   partyBreakdown: Array<{
@@ -182,12 +210,40 @@ export function buildMpVotes(
   );
 }
 
+function buildStatementProposal(
+  input: StatementProposalInput | null | undefined,
+): SingleVoteData["statementProposal"] {
+  if (!input) return null;
+  if (input.kind === "moniste") {
+    return {
+      kind: "moniste",
+      title: input.title,
+      pdfUrl: `https://www.eduskunta.fi/FI/vaski/JulkaisuMetatieto/Documents/${input.edkIdentifier}.pdf`,
+    };
+  }
+  const dissentLabel =
+    input.resolved.dissentHeading ??
+    (input.resolved.dissentNumber !== null
+      ? `Vastalause ${input.resolved.dissentNumber}`
+      : "Vastalause");
+  return {
+    kind: "vastalause",
+    statementText: input.resolved.statementText,
+    statementNumber: input.resolved.statementNumber,
+    dissentLabel,
+    reportIdentifier: input.reportIdentifier,
+    reportUrl: `/asiakirja/${input.reportId}?kind=mietinto`,
+  };
+}
+
 export function buildSingleVoteData(input: {
   voting: VotingRow;
   details: VotingInlineDetails | null;
+  statementProposal?: StatementProposalInput | null;
   provenanceService: ProvenanceService;
 }): SingleVoteData {
   const { voting, details, provenanceService } = input;
+  const propositions = parseVotePropositions(voting.title);
 
   const tally = buildVoteTally({
     nYes: voting.n_yes,
@@ -298,9 +354,10 @@ export function buildSingleVoteData(input: {
         tally.outcome === "ok"
           ? i18next.t("votings:outcome_approved")
           : i18next.t("votings:outcome_rejected"),
-      yesProposition: null,
-      noProposition: null,
+      yesProposition: propositions?.yes ?? null,
+      noProposition: propositions?.no ?? null,
     },
+    statementProposal: buildStatementProposal(input.statementProposal),
     provenance: provenanceService.forRow("Voting", voting.id, {
       value: `${i18next.t(
         tally.outcome === "ok"

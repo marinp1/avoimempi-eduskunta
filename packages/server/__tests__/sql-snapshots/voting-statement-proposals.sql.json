@@ -1,0 +1,23 @@
+{
+  "columns": {
+    "dissent_number": "number",
+    "dissent_order": "number",
+    "heading": "string",
+    "parliament_identifier": "string",
+    "report_id": "number",
+    "statement_number": "number",
+    "statement_order": "number",
+    "statement_text": "string"
+  },
+  "hasNulls": {
+    "dissent_number": false,
+    "dissent_order": false,
+    "heading": false,
+    "parliament_identifier": false,
+    "report_id": false,
+    "statement_number": false,
+    "statement_order": false,
+    "statement_text": false
+  },
+  "rowCount": 1
+}

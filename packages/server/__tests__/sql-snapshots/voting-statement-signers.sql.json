@@ -1,0 +1,17 @@
+{
+  "columns": {
+    "dissent_order": "number",
+    "first_name": "string",
+    "last_name": "string",
+    "report_id": "number",
+    "signer_order": "number"
+  },
+  "hasNulls": {
+    "dissent_order": false,
+    "first_name": false,
+    "last_name": false,
+    "report_id": false,
+    "signer_order": false
+  },
+  "rowCount": 1
+}

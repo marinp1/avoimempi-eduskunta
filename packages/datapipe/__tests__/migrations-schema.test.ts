@@ -88,6 +88,7 @@ describe("Migration schema", () => {
       "V001.042__expert_statement_analysis.sql",
       "V001.043__party_summary_materialized.sql",
       "V001.044__person_metric_materialized.sql",
+      "V001.045__vaski_dissenting_opinion_schema.sql",
     ]);
   });
 
@@ -354,6 +355,56 @@ describe("Migration schema", () => {
       expect(votingPartyStatsColumns).toContain("n_ei");
       expect(votingPartyStatsColumns).toContain("n_tyhjaa");
       expect(votingPartyStatsColumns).toContain("n_poissa");
+    } finally {
+      db.close();
+    }
+  });
+
+  test("creates dissenting opinion and plenary annex tables", () => {
+    const db = createTestDb(45);
+    try {
+      const tableNames = getTableNames(db);
+      expect(tableNames).toContain("CommitteeReportDissent");
+      expect(tableNames).toContain("CommitteeReportDissentStatement");
+      expect(tableNames).toContain("CommitteeReportDissentSigner");
+      expect(tableNames).toContain("PlenaryAnnex");
+
+      const dissentColumns = getColumnNames(db, "CommitteeReportDissent");
+      expect(dissentColumns).toContain("report_id");
+      expect(dissentColumns).toContain("dissent_order");
+      expect(dissentColumns).toContain("dissent_number");
+      expect(dissentColumns).toContain("heading");
+      expect(dissentColumns).toContain("signature_date");
+
+      const statementColumns = getColumnNames(
+        db,
+        "CommitteeReportDissentStatement",
+      );
+      expect(statementColumns).toContain("statement_order");
+      expect(statementColumns).toContain("statement_number");
+      expect(statementColumns).toContain("statement_text");
+
+      const signerColumns = getColumnNames(db, "CommitteeReportDissentSigner");
+      expect(signerColumns).toContain("signer_order");
+      expect(signerColumns).toContain("person_id");
+      expect(signerColumns).toContain("party");
+
+      const annexColumns = getColumnNames(db, "PlenaryAnnex");
+      expect(annexColumns).toContain("edk_identifier");
+      expect(annexColumns).toContain("title");
+      expect(annexColumns).toContain("source_reference");
+      expect(annexColumns).toContain("session_key");
+      expect(annexColumns).toContain("source_path");
+
+      const indexNames = (
+        db
+          .query(
+            "SELECT name FROM sqlite_master WHERE type='index' ORDER BY name",
+          )
+          .all() as Array<{ name: string }>
+      ).map((row) => row.name);
+      expect(indexNames).toContain("idx_committeereport_source_reference");
+      expect(indexNames).toContain("idx_plenaryannex_source");
     } finally {
       db.close();
     }

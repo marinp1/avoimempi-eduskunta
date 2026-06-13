@@ -11,7 +11,8 @@ db_dump.sql
 .quokka
 *.db
 *.db-*
-
+*.db.tmp
+*.db.tmp-*
 application/public/output.css
 
 data/
